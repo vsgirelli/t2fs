@@ -1,0 +1,156 @@
+LabBook com anotações relativas ao desenvolvimento do trabalho 2 da disciplina
+de Sistemas Operacionais I, UFRGS -> T2FS (libt2fs.a)
+
+# 12/10/18
+
+-   Leitura da especificação do trabalho:
+* FS com hierarquia em árvore
+* Alocação encadeada para gerenciamento de espaço em disco
+* Esquema parecido com a FAT:
+  Em resumo, a FAT é uma tabela, File Allocation Table.
+  Na FAT tem os endereços para o bloco subsequente:
+  - Lê o bloco 217 dos dados.
+  - Lê o bloco 217 da FAT: ele contém o ponteiro para o próximo bloco, o 619.
+  - Lê o bloco 619 dos dados.
+  - Lê o bloco 619 da FAT: ele aponta para o próximo bloco de dados do arquivo.
+And so on.
+
+* SETORES: tamanho lógico de 256 bytes.
+* Setor 0: superbloco (infos sobre o disco). Ocupa 1 setor lógico. 
+* Setores 1-k: FAT. K setores lógicos.
+* Restante dos blocos C são de clusters (dados). Os clusters 0 e 1 são
+  reservados. Clusters são formados por n setores lógicos, e seu identificador
+  possui 32 bits. O número de setores contíguos que formam um cluster é indicado
+  na tabela do superbloco, no campo SectorsPerCluster.
+
+* Hierarquia em árvore com links simbólicos.
+* Pathname (como no Linux).
+* Caminhos absolutos (/) e relativos (./).
+
+* Arquivos:
+  - Regulares de tamanho variável. ASCII ou binários.
+  - Diretório, limitado ao tamanho de um cluster. Composto por registros.
+* Registros:
+  - Arquivo regular
+  - Arquivo de diretório
+  - Links simbólicos
+
+* Infos sobre livre, ocupado ou badcluster fornecidos na FAT.
+* Clusters ocupados: ou EOF se o cluster for o último do arquivo, ou o número do
+  próximo cluster onde o arquivo continua (encadeamento).
+
+* FAT:
+Seu tamanho exato em setores lógicos depende da quantidade de setores lógicos
+que compõem um cluster e do tamanho total da partição T2FS. É organizada como
+uma LISTA COM C ELEMENTOS DE 32 BITS (4 bytes). Cada elemento dessa lista
+corresponde a um cluster de dados, então o tamanho de entradas da FAT é o mesmo
+da quantidade de clusters de dados.
+
+(4 Bytes)
+0x00000000    O cluster está livre
+
+0x00000001    Não deve aparecer em nenhum dos campos de um elemento da FAT.
+
+0x00000002 a  Número do próximo cluster do arquivo.
+0xFFFFFFFD
+
+0xFFFFFFFE    Cluster com defeito. Não pode ser alocado para dados.
+
+0xFFFFFFFF    Último cluster do arquivo (EOF).
+
+Então, ex de registro:
+Dir: File1.txt - 217 (217 é o primeiro cluster do arquivo)
+  - Lê o bloco 217 dos dados.
+  - Lê o bloco 217 da FAT: ele contém o ponteiro para o próximo bloco, o 619.
+  - Lê o bloco 619 dos dados.
+  - Lê o bloco 619 da FAT: ele aponta para o próximo bloco de dados do arquivo.
+
+* Diretórios:
+Ocupam um único cluster (a quantidade de entradas é então limitada, causando
+erro caso se deseje inserir uma nova entrada e o Diretório estiver cheio).
+É um arquivo com N entradas. Duas são reservadas para o diretório pai .. e o
+diretório corrente . .
+
+Estrutura de um registro:
+(Posição relativa)  Tamanho               Descrição
+                    (bytes)
+      0               1         Tipo da entrada. Se o registro for válido,
+                                indica o tipo do arquivo:
+                                0x00 - inválido
+                                0x01 - regular
+                                0x02 - diretório
+                                0x03 - link simbólico
+
+      1               51        String com o nome do arquivo, em ASCII. Case
+                                sensitive. (Preencher com \0 (0x00)).
+
+      52              4         Tamanho do arquivo, em número de bytes. Se o
+                                registro for de um dir ou de um link, então esse
+                                valor corresponde ao tamanho do bloco. Não é um
+                                múltiplo do tamanho dos clusters.
+
+      56              4         Tamanho do arquivo, em número de clusters. Se o
+                                registro for de um dir ou de um link, fixo em 1.
+
+      60              4         Número do primeiro cluster de dados dessa
+                                entrada do diretório.
+
+* Diretório raiz:
+Mesma estrutura de um dir qualquer. Só deve-se observar que a entrada .. aponta
+para ele mesmo e ele é atribuído a um cluster fixo, indicado no superbloco.
+
+* Componentes do T2FS:
+- Fornecidos: disco T2FS e apidisk.
+- A ser entregue: implementação do sistema de arquivos.
+
+* A biblioteca a ser desenvolvida corresponde a uma interface para que
+  programas de usuário e utilitários possam se comunicar com o dispositivo.
+A camada de apidisk é fornecida e emula o comportamento do driver do
+dispositivo. O disco é um arquivo que simula um disco formatado em T2FS. As
+chamadas da apidisk são funções de leitura e escrita de SETORES LÓGICOS.
+
+* Infos contidas no superbloco:
+- Identificação do FS.
+- Versão.
+- Quantidade de setores lógicos do superbloco (funçõeixo em 1).
+- Tamanho total (bytes) da partição T2FS (superbloco, FAT e clusters de dados).
+- Quantidade total de setores lógicos da partição.
+- Número de setores lógicos por cluster.
+- Número do setor lógico em que a FAT inicia (fixo em 1).
+- Cluster de início do diretório raiz.
+- Primeiro setor lógico da área de blocos de dados (clusters de dados.)
+
+* Para todos os arquivos existentes no T2FS existe um registro na entrada do
+diretório. Entradas assim possuem o mesmo formato em qualquer nível da
+hierarquia de diretórios. Portanto, são tipos de arquivos: diretório contém
+informações sobre outros arquivos, diretórios ou links. Arquivos normais contêm
+dados. Arquivos do tipo link simbólico são arquivos com apenas um bloco, e seu
+conteúdo é uma string que corresponde ao caminho absoluto ou relativo para o objeto.
+
+Sempre que um arquivo for criado, deve ser adicionada uma entrada de Diretório
+no dir informado pelo caminho (que pode ser relativo ou absoluto), e um primeiro
+cluster deve ser alocado. À medida que esse arquivo cresce, devem ser
+alocados e encadeados novos clusters. O mesmo controle deve ser feito com o
+descrescimento do arquivo. Ao remover um arquivo, todos os clusters que o
+compõem devem ser liberados.
+
+Ao criar-se um dir, deve-se alocar duas entradas de dir para os dir . e  .. .
+Para remover um dir é necessário que ele esteja vazio (à exeção dos . e ..).
+
+Links simbólicos tbm ocupam uma entrada no dir, e tbm ocupam apenas um cluster.
+Ao remover o link, apenas remove-se a entrada do dir e o cluster dele. Se o
+arquivo regular apontado pelo link for removido, o link fica inconsistente. It
+seems nothing needs to be done about it, fuck the user.
+
+* Our job:
+Criar a libt2fs que permite acesso aos arquivos do T2FS.
+Algumas EDs necessárias e os protótipos das funções estão definidas no arquivo
+t2fs.h.
+O T2FS deve permitir que seja possível ter-se até 10 arquivos regulares abertos
+simultaneamente, podendo-se abrir o mesmo arquivo mais de uma vez.
+TODO verificar os protótipos todos.
+
+* apidisk:
+Realiza operações de I/O no subsistema de I/O do disco. Operações sobre setores
+lógicos do disco, numerados sequencialmente a partir do zero e de tamanho fixo
+256 bytes. Funções de read_sector, write_sector.

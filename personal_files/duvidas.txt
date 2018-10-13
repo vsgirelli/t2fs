@@ -1,0 +1,17 @@
+Arquivo com dúvidas a respeito do enunciado:
+
+* Sobre o campo byteFileSyze, campo de um registro:
+Os slides falam: se o registro corresponde a um dir ou a um link, então o valor
+desse campo deve ser o tamanho do bloco. Por tamanho do bloco eu devo entender
+tamanho do cluster?
+
+* O que exatamente são blocos, setores e clusters nesse trabalho? lol
+Well, o HD é formatado logicamente em T2FS. Essa formatação distribui os setores
+físicos em setores lógicos.
+Um cluster então é formado por n setores lógicos. As leituras e escritas são
+feitas sobre SETORES LÓGICOS. É semelhante ao bloco que vemos em aula, onde um
+bloco é formado por n setores lógicos. E, aparentemente, blocos e clusters são a
+mesma coisa.
+TURNS OUT THERE WAS A WHOLE SECTION ABOUT THIS LOL
+
+*
