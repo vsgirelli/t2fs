@@ -14,4 +14,9 @@ bloco é formado por n setores lógicos. E, aparentemente, blocos e clusters sã
 mesma coisa.
 TURNS OUT THERE WAS A WHOLE SECTION ABOUT THIS LOL
 
-*
+* Contador de posição ta em cluster ou em bytes?
+
+* O handle de um arquivo é o que exatamente? O primeiro cluster ou um handle
+  nosso?
+
+* Quantos diretórios poem estar abertos?

@@ -16,7 +16,7 @@ de Sistemas Operacionais I, UFRGS -> T2FS (libt2fs.a)
 And so on.
 
 * SETORES: tamanho lógico de 256 bytes.
-* Setor 0: superbloco (infos sobre o disco). Ocupa 1 setor lógico. 
+* Setor 0: superbloco (infos sobre o disco). Ocupa 1 setor lógico.
 * Setores 1-k: FAT. K setores lógicos.
 * Restante dos blocos C são de clusters (dados). Os clusters 0 e 1 são
   reservados. Clusters são formados por n setores lógicos, e seu identificador
@@ -154,3 +154,52 @@ TODO verificar os protótipos todos.
 Realiza operações de I/O no subsistema de I/O do disco. Operações sobre setores
 lógicos do disco, numerados sequencialmente a partir do zero e de tamanho fixo
 256 bytes. Funções de read_sector, write_sector.
+
+
+
+# 13/10/18
+
+
+- Sobre links simbólicos:
+Ao criar um link, deve-se alocar uma entrada no diretório e UM cluster. Neste
+cluster, que deve ser único para links, deve-se colocar o endereço para o qual
+esse link aponta, e não o endereço do cluster de início do arquivo. Se for posto
+o primeiro endereço de cluster, mesmo que o arquivo deixe de existir o link pode
+continuar apontando para aquele endereço e acessando os dados salvos. Portanto,
+deve-se colocar o path do arquivo. Desse modo, caso tente-se acessar o arquivo
+depois de ele ser removido, não existirá uma entrada no diretório para aquele
+arquivo, então não há problemas de acessar dados indevidos.
+
+- Sobre o que é salvo na entrada da FAT:
+Em cada entrada da FAT o que existe é o endereço para o próximo cluster do
+arquivo, ou seja, quando eu chegar no bloco 300 e  ele for o último cluster do
+arquivo, a sua entrada na FAT vai conter o valor 0xFFFFFFFF.
+Além disso, a FAT é um vetor unsigned int: cada posição do vetor vai corresponder
+a um cluster de dados. O tamanho desse vetor é dado pela info de tamanho da FAT
+contida no superbloco.
+
+- Os blocos de dados não vão ficar em memória!!!!!!!
+
+- Quando se quer fazer a leitura de um cluster, deve-se usar a apidisk. Observar
+  que o endereço do cluster não indica necessariamente o endereço do setor lógico
+no disco, pois um cluster pode ser formado por n setores lógicos.
+
+- Leituras de arquivo diretório deverão fazer um casting pra ED de diretório:
+Cada dir é um vetor de x t2fs_record (x = cluster_size / 64):
+t2fs_record dir_vec[cluster_size/64];
+Assim, cada um dos elementos do vetor dir_vec vai ser um registro do diretório
+que está sendo lido. Assim, quando o diretório for criado, todos os registros
+devem ser inicializados com TypeVal = 0 (arquivo inválido).
+
+- Como pode-se ter até 10 arquivos regulres abertos, então provavelmente é
+necessário fazer alocação dinâmica de arquivos Regulares.
+
+- ED para arquivos abertos:
+t2fs_record do arquivo
+current postion pointer (em bytes)
+
+*** GLOBAIS:
+current dir (tbm com seu t2fs_record)
+FAT
+vetor de 10 arquivos abertos
+
