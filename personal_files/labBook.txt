@@ -203,3 +203,14 @@ current dir (tbm com seu t2fs_record)
 FAT
 vetor de 10 arquivos abertos
 
+
+
+# 14/10/18
+
+- Abrir arquivos (regulares, Diretórios ou links):
+Para abrir qualquer tipo de arquivo deve-se verificar a existência desse
+arquivo. A existência dele tanto corresponde a existir uma entrada em um
+diretório para ele, quanto ser oferecido um path válido. Portanto, antes de
+abrir arquivos, sejam eles regulares, diretórios ou links, deve-se verificar o
+path informado. Por isso, vou criar as funções checkPath, que vai fazer a
+verificacão do path informado, retornando um bool.
