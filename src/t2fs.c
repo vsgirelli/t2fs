@@ -10,26 +10,6 @@
 
 #include "../include/cutils.h"
 
-// TODO funão de inicializaão que lê o Superbloco e incializa as variáveis
-// necessárias
-
-// TODO verificar qual o tipo exatamente do nosso working dir
-// Current working directory
-struct t2fs_record cwd;
-
-// Must be initialized with the Superblock data.
-struct superblock;
-
-// fat_size initialized with the Superblock data.
-//int fat_size;
-//unsigned int FAT[fat_size];
-// PROBLEMA: eu não posso declarar um vetor com um tamanho definido apenas em
-// tempo de execuao, pq o compilador precisa alocar espaço entre as variáveis
-// globais pra ele. Então ou a gente faz uma lista encadeada (meh) ou a gente só
-// mantém em disco e foda-se
-
-// Array with the open files.
-oFile opened_files[MAX_OPEN_FILES];
 
 /*-----------------------------------------------------------------------------
 Função: Usada para identificar os desenvolvedores do T2FS.
@@ -84,7 +64,7 @@ FILE2 create2 (char *filename) {
    *  Então, a cada parte do path, tenho que chamar a splitPath, para pegar a
    *  parte do path que deve ser analisada:
    *  /home/vsgirelli/ufrgs/sisop/t2fs/
-   *  Como comea com /, tenho que abrir o root, e ler os regs do root.
+   *  Como comeca com /, tenho que abrir o root, e ler os regs do root.
    *  Primeiro splito pegando home. Verifico se existe algum registro de root
    *  com nome home.
    *  Se sim, fecho root e abro o cluster de home, lendo os registro e ....
@@ -94,7 +74,7 @@ FILE2 create2 (char *filename) {
    *  com mesmo nome do arquivo que se deseja criar, então cria-se o arquivo.
    *  Para criar o arquivo é necessário encontrar um cluster que esteja livre.
    *  Isso pode ser feito acessando a FAT e verificando algum cluster livre.
-   *  Como é endereamento encadeado, posso pegar qualquer um, pode ser o
+   *  Como é enderecamento encadeado, posso pegar qualquer um, pode ser o
    *  primeiro. Assim, requisito a apidisk a leitura do cluster x que está livre
    *  na FAT, altero a entrada da FAT, e devo criar um registro no cwd.
    *  Lembrar do current_pointer setado em 0.
@@ -327,6 +307,12 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o identifi
 	Em caso de erro, será retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
+  /*
+   *  Para abrir um diretório, deve-se percorrer a árvore  de diretórios em
+   *  busca da existência do diretório. Isso vale também para arquivos. Então,
+   *  pode-se ter uma funcao que, dado um path, verifica se o path é válido ou
+   *  não.
+   */
 
   // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
