@@ -12,6 +12,8 @@
 #define FUNC_WORKING 0
 #define FUNC_NOT_IMPLEMENTED -1
 #define FUNC_NOT_WORKING -2
+#define INSUFICIENT_SIZE -3 
 
+#define MAX_OPEN_FILES 10
 
 #endif

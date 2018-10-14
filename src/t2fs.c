@@ -4,9 +4,32 @@
  *  2018-2
  *  Authors:
  *  Leandro Pereira
- *  Pedro Ceriotti
+ *  Pedro Ceriotti Trindade
  *  Valéria S. Girelli
  */
+
+#include "../include/cutils.h"
+
+// TODO funão de inicializaão que lê o Superbloco e incializa as variáveis
+// necessárias
+
+// TODO verificar qual o tipo exatamente do nosso working dir
+// Current working directory
+struct t2fs_record cwd;
+
+// Must be initialized with the Superblock data.
+struct superblock;
+
+// fat_size initialized with the Superblock data.
+//int fat_size;
+//unsigned int FAT[fat_size];
+// PROBLEMA: eu não posso declarar um vetor com um tamanho definido apenas em
+// tempo de execuao, pq o compilador precisa alocar espaço entre as variáveis
+// globais pra ele. Então ou a gente faz uma lista encadeada (meh) ou a gente só
+// mantém em disco e foda-se
+
+// Array with the open files.
+oFile opened_files[MAX_OPEN_FILES];
 
 /*-----------------------------------------------------------------------------
 Função: Usada para identificar os desenvolvedores do T2FS.
@@ -36,7 +59,7 @@ int identify2 (char *name, int size) {
 }
 
 /*-----------------------------------------------------------------------------
-Função: Criar um novo arquivo.
+Função: Criar um novo arquivo e abrir ele.
 	O nome desse novo arquivo é aquele informado pelo parâmetro "filename".
 	O contador de posição do arquivo (current pointer) deve ser colocado na posição zero.
 	Caso já exista um arquivo ou diretório com o mesmo nome, a função deverá retornar um erro de criação.
@@ -47,9 +70,35 @@ Entra:	filename -> nome do arquivo a ser criado.
 
 Saída:	Se a operação foi realizada com sucesso, a função retorna o handle do arquivo (número positivo).
 	Em caso de erro, deve ser retornado um valor negativo.
+
+  - Observaões:
+  * O path pode ser absoluto ou relativo.
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
-
+  /*
+   *  Primeiro precisa-se verificar a existência do path, ou seja, das pastas
+   *  que compõem o path (relativo ou absoluto).
+   *  Pra isso, deve-se:
+   *  1 - abrir cada diretório e
+   *  2 - ler as entradas do diretório
+   *  Então, a cada parte do path, tenho que chamar a splitPath, para pegar a
+   *  parte do path que deve ser analisada:
+   *  /home/vsgirelli/ufrgs/sisop/t2fs/
+   *  Como comea com /, tenho que abrir o root, e ler os regs do root.
+   *  Primeiro splito pegando home. Verifico se existe algum registro de root
+   *  com nome home.
+   *  Se sim, fecho root e abro o cluster de home, lendo os registro e ....
+   *  Assim, preciso chamar as demais funcs de dir. Elas precisam ser as
+   *  primeiras a ser implementadas.
+   *  Após achar o path, e verificar que no cwd não há um registro de arquivo
+   *  com mesmo nome do arquivo que se deseja criar, então cria-se o arquivo.
+   *  Para criar o arquivo é necessário encontrar um cluster que esteja livre.
+   *  Isso pode ser feito acessando a FAT e verificando algum cluster livre.
+   *  Como é endereamento encadeado, posso pegar qualquer um, pode ser o
+   *  primeiro. Assim, requisito a apidisk a leitura do cluster x que está livre
+   *  na FAT, altero a entrada da FAT, e devo criar um registro no cwd.
+   *  Lembrar do current_pointer setado em 0.
+   */
   return FUNC_NOT_WORKING;
 }
 
@@ -216,7 +265,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
-
+  // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
 }
 
@@ -236,6 +285,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
 
+  // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
 }
 
@@ -257,6 +307,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 -----------------------------------------------------------------------------*/
 int getcwd2 (char *pathname, int size) {
 
+  // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
 }
 
@@ -277,6 +328,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o identifi
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
 
+  // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
 }
 
@@ -299,6 +351,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 -----------------------------------------------------------------------------*/
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 
+  // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
 }
 
@@ -314,6 +367,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 -----------------------------------------------------------------------------*/
 int closedir2 (DIR2 handle) {
 
+  // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
 }
 
