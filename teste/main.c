@@ -516,7 +516,7 @@ int main()
     char *token;
     //int i,n;
     //int flagAchou, flagEncerrar;
-    
+
     token = checkPath(cmd);
     printf("token: %s\n", token);
     printf("cmd: %s\n", cmd);

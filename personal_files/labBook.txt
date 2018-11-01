@@ -72,6 +72,8 @@ erro caso se deseje inserir uma nova entrada e o Diretório estiver cheio).
 diretório corrente . .
 
 Estrutura de um registro:
+Total de 64 bytes por registro (considerando o tamanho do cluster, a quantidade
+de registros de um dir é limitada).
 (Posição relativa)  Tamanho               Descrição
                     (bytes)
       0               1         Tipo da entrada. Se o registro for válido,
@@ -131,7 +133,7 @@ Sempre que um arquivo for criado, deve ser adicionada uma entrada de Diretório
 no dir informado pelo caminho (que pode ser relativo ou absoluto), e um primeiro
 cluster deve ser alocado. À medida que esse arquivo cresce, devem ser
 alocados e encadeados novos clusters. O mesmo controle deve ser feito com o
-descrescimento do arquivo. Ao remover um arquivo, todos os clusters que o
+"descrescimento" do arquivo. Ao remover um arquivo, todos os clusters que o
 compõem devem ser liberados.
 
 Ao criar-se um dir, deve-se alocar duas entradas de dir para os dir . e  .. .
@@ -214,3 +216,10 @@ diretório para ele, quanto ser oferecido um path válido. Portanto, antes de
 abrir arquivos, sejam eles regulares, diretórios ou links, deve-se verificar o
 path informado. Por isso, vou criar as funções checkPath, que vai fazer a
 verificacão do path informado, retornando um bool.
+
+
+
+# 31/10/18
+
+-   Rellou i missed you :)
+

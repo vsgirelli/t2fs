@@ -37,23 +37,24 @@ int readSuperblock() {
 
 /*
  *  Function that checks if the informed path exists.
- *  Uses strtok to generate the tokens, and opens the dir's cluster to 
+ *  Uses strtok to generate the tokens, and opens the dir's cluster to
  *  check the file's records inside the dir.
  */
 char* checkPath(char *path) {
   int isAbsolute = (*path == '/');
 
-  readSuperblock();
+  //readSuperblock();
 
   Record dir;
 
   char *token = malloc(strlen(path) * sizeof(char));
-  memset(token, '\0', sizeof(token));
+  int tokenSize = sizeof(token);
+  memset(token, '\0', tokenSize);
   strcpy(token, path);
   token = strtok(token, "/");
 
   if (isAbsolute) { // If the given path is absolute, starts from the root dir
-    dir = root;   
+    dir = root;
   }
   else { // If it is a relative path, starts from the cwd
     dir = cwd;
