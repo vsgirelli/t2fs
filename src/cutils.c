@@ -13,26 +13,29 @@ int readSuperblock() {
   if (read_sector(0, buffer) != 0) {
     return READ_ERROR;
   }
-  
-	//char    id[4];          	/* Identificação do sistema de arquivo. É formado pelas letras T2FS. */
-	//WORD    version;        	/* Versão atual desse sistema de arquivos: (valor fixo 0x7E2=2018; 2=2º semestre). */
-	//WORD    superblockSize; 	/* Quantidade de setores lógicos que formam o superbloco. (fixo em 1 setor) */
-	//DWORD	DiskSize;			/* Tamanho total, em bytes, da partição T2FS. Inclui o superbloco, a área de FAT e os clusters de dados. */
-	//DWORD	NofSectors;			/* Quantidade total de setores lógicos da partição T2FS. Inclui o superbloco, a área de FAT e os clusters de dados. */
-	//DWORD	SectorsPerCluster;	/* Número de setores lógicos que formam um cluster. */
-	//DWORD	pFATSectorStart;	/* Número do setor lógico onde a FAT inicia. */
-	//DWORD	RootDirCluster;		/* Cluster onde inicia o arquivo correspon-dente ao diretório raiz */
-	//DWORD	DataSectorStart;	/* Primeiro setor lógico da área de blocos de dados (cluster 0). */
 
   // since the ID uses 4 bytes, copy 4 bytes from the buffer
   strncpy(superblock.id, (char *)buffer, 4);
-  superblock.version = (buffer + 4);
+  // and the other informationi's offset is described on the t2fs description
+  superblock.version = *( (WORD*) (buffer + 4) );
+  superblock.superblockSize = *( (WORD*) (buffer + 6) );
+  superblock.DiskSize = *( (DWORD*) (buffer + 8) );
+  superblock.NofSectors = *( (DWORD*) (buffer + 12) );
+  superblock.SectorsPerCluster = *( (DWORD*) (buffer + 16) );
+  superblock.pFATSectorStart = *( (DWORD*) (buffer + 20) );
+  superblock.RootDirCluster = *( (DWORD*) (buffer + 24) );
+  superblock.DataSectorStart = *( (DWORD*) (buffer + 28) );
+  printf("superblock.id: %s\n", superblock.id);
   printf("superblock.version: %d\n", superblock.version);
+  printf("superblock.superblockSize: %d\n", superblock.superblockSize);
+  printf("superblock.DiskSize: %d\n", superblock.DiskSize);
+  printf("superblock.NofSectors: %d\n", superblock.NofSectors);
+  printf("superblock.SectorsPerCluster: %d\n", superblock.SectorsPerCluster);
+  printf("superblock.pFATSectorStart: %d\n", superblock.pFATSectorStart);
+  printf("superblock.RootDirCluster: %d\n", superblock.RootDirCluster);
+  printf("superblock.DataSectorStart: %d\n", superblock.DataSectorStart);
 
-  
-
-
-  return FUNC_NOT_WORKING;
+  return FUNC_WORKING;
 }
 
 /*
@@ -42,8 +45,6 @@ int readSuperblock() {
  */
 char* checkPath(char *path) {
   int isAbsolute = (*path == '/');
-
-  //readSuperblock();
 
   Record dir;
 
