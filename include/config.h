@@ -17,4 +17,6 @@
 
 #define MAX_OPEN_FILES 10
 
+#define SIZE_OF_T2FS_RECORD 64 
+
 #endif
