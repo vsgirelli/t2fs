@@ -14,13 +14,16 @@ INC_DIR=./include
 BIN_DIR=./bin
 SRC_DIR=./src
 
-OBJS=$(BIN_DIR)/t2fs.o
+OBJS=$(BIN_DIR)/t2fs.o $(BIN_DIR)/cutils.o
 
-all: $(BIN_DIR)/t2fs.o
-	ar crs $(LIB_DIR)/libt2fs $(OBJS)
+all: t2fs cutils
+	ar crs $(LIB_DIR)/libt2fs.a $(OBJS) $(LIB_DIR)/apidisk.o
 
-$(BIN_DIR)/t2fs.o: $(SRC_DIR)/t2fs.c
-	gcc -c $(SRC_DIR)/t2fs.c -o $(BIN_DIR)/t2fs.o -Wall
+t2fs: $(SRC_DIR)/t2fs.c
+	gcc -c $(SRC_DIR)/t2fs.c -o $(BIN_DIR)/t2fs.o -Wall -ggdb
+
+cutils: $(SRC_DIR)/cutils.c
+	gcc -c $(SRC_DIR)/cutils.c -o $(BIN_DIR)/cutils.o -Wall -ggdb
 
 clean:
 	rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/*.o $(SRC_DIR)/*~ $(INC_DIR)/*~ *~
