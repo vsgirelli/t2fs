@@ -6,7 +6,7 @@ LIB_DIR=../lib
 all: main 
 
 main: main.c $(LIB_DIR)/libt2fs.a
-	$(CC) -o main main.c -L$(LIB_DIR) -lt2fs -Wall
+	$(CC) -o main main.c -L$(LIB_DIR) -lt2fs -Wall -ggdb
 
 clean:
 	rm -rf main 
