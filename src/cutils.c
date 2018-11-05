@@ -13,7 +13,7 @@ int readSuperblock() {
   if (read_sector(0, buffer) != 0) {
     return READ_ERROR;
   }
-  
+
 	//char    id[4];          	/* Identificação do sistema de arquivo. É formado pelas letras T2FS. */
 	//WORD    version;        	/* Versão atual desse sistema de arquivos: (valor fixo 0x7E2=2018; 2=2º semestre). */
 	//WORD    superblockSize; 	/* Quantidade de setores lógicos que formam o superbloco. (fixo em 1 setor) */
@@ -29,7 +29,7 @@ int readSuperblock() {
   superblock.version = (buffer + 4);
   printf("superblock.version: %d\n", superblock.version);
 
-  
+
 
 
   return FUNC_NOT_WORKING;
@@ -43,7 +43,7 @@ int readSuperblock() {
 char* checkPath(char *path) {
   int isAbsolute = (*path == '/');
 
-  //readSuperblock();
+  readSuperblock();
 
   Record dir;
 
