@@ -26,7 +26,10 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 -----------------------------------------------------------------------------*/
 int identify2 (char *name, int size) {
   // 00 representa o null character
-  char* componentes = "4C 65 61 6E 64 72 6F 20 50 65 72 65 69 72 61 20 2D 20 30 30 32 37 33 31 31 34 5C 6E 50 65 64 72 6F 20 54 72 69 6E 64 61 64 65 20 2D 20 30 30 32 36 34 38 34 36 5C 6E 56 61 6C 65 72 69 61 20 47 69 72 65 6C 6C 69 20 2D 20 30 30 32 36 31 35 39 36 00";
+  // char* componentes = "4C 65 61 6E 64 72 6F 20 50 65 72 65 69 72 61 20 2D 20 30 30 32 37 33 31 31 34 5C 6E 50 65 64 72 6F 20 54 72 69 6E 64 61 64 65 20 2D 20 30 30 32 36 34 38 34 36 5C 6E 56 61 6C 65 72 69 61 20 47 69 72 65 6C 6C 69 20 2D 20 30 30 32 36 31 35 39 36 00";
+
+  
+  char *componentes = "Leandro Pereira - 00273114\nPedro Trindade - 00264846\nVal�ria S. Girelli - 00261596\n";
 
   if (strlen(componentes) > size)
   {

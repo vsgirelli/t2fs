@@ -30,13 +30,19 @@ typedef struct open_file {
 // **** GLOBAL VARIABLES
 // TODO verificar qual o tipo exatamente do nosso working dir
 // Current working directory
-Record cwd;
+Record *cwd;
 // Record for the root dir
-Record root;
+Record *root;
 // Superblock
 Superblock superblock;
 // Array with the open files.
 oFile opened_files[MAX_OPEN_FILES];
+// Indicates if the t2fs is initialized
+int initializedT2fs;
+// Cluster size, in bytes
+int clusterSize;
+// Maximum records per directory
+int recordsPerDir;
 
 // fat_size initialized with the Superblock data.
 //int fat_size;
@@ -52,6 +58,5 @@ oFile opened_files[MAX_OPEN_FILES];
 // necessárias
 
 char* checkPath(char *path);
-
 
 #endif
