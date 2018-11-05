@@ -223,3 +223,44 @@ verificacÃ£o do path informado, retornando um bool.
 
 -   Rellou i missed you :)
 
+
+# 05/11/18
+
+
+-   Tentanu entender casting:
+(type name) expr
+double mean = (double) sum / count;
+o operador de cast tem precedência sobre a div, então ele opera antes em sum e
+depois é feita a divisão.
+Type hierarchy:
+long double
+  ^
+double
+  ^
+float
+  ^
+unsigned long long
+  ^
+long long
+  ^
+unsigned long
+  ^
+long
+  ^
+unsigned int
+  ^
+int
+
+Functions that perform data type conversion:
+atof : string to float
+atoi : string to  int
+atol : string to long
+itoa : int to string
+ltoa : long to String
+
+Accordingly to stack overflow, it is wrong to cast a malloc, becaus de void
+pointer returned by malloc is automatically converted to the correct type.
+malloc allocates based on the byte count, not on the type.
+
+
+Also, for allocating and initializing with zeros, use calloc.

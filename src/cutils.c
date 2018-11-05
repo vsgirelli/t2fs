@@ -26,9 +26,12 @@ int initializeT2fs() {
   clusterSize = SECTOR_SIZE * superblock.SectorsPerCluster;
   // And the maximum number of records in a dir depends on the cluster size
   // (because a dir occupies one cluster) and the size of the records's struct
-  recordsPerDir = clusterSize/SIZE_OF_T2FS_RECORD;
-  //root = (Record*) malloc(clusterSize);
-  root = (Record*) malloc(sizeof(Record));
+  recordsPerDir = clusterSize/sizeof(Record);
+
+  // malloc allocates based on the byte count, not on the type, so there is no
+  // need for cast.
+  // All directories occupy ONE cluster
+  root = malloc(clusterSize);
   unsigned char rootBuffer[SECTOR_SIZE];
   // reading root's cluster (all of it's sectors)
   int i;
@@ -36,10 +39,12 @@ int initializeT2fs() {
     if (read_sector((superblock.RootDirCluster + i), rootBuffer) != 0) {
       return READ_ERROR;
     }
-    //memcpy(root, rootBuffer, SECTOR_SIZE);
-    //printf("TRYING NOT TO DIE: %c\n\n", rootBuffer);
-    strncpy(root, (char *)rootBuffer, 1);
-    printf("root.TypeVal: %c\n\n", root->TypeVal);
+    //printf("TESTING VAR'S SIZES:\nroot: %d\n rootBuffer: %d\n Record struct: %d\n\n", sizeof(*root), sizeof(rootBuffer), sizeof(Record));
+    // memcpy does a binary copy of the data.
+    memcpy((root + (SECTOR_SIZE * i)), rootBuffer, SECTOR_SIZE);
+    printf("TRYING NOT TO DIE: %c\n\n", *root);
+    //strncpy(root, (char *)rootBuffer, 1);
+    //printf("root.TypeVal: %c\n\n", root->TypeVal);
     //strncpy(root[i * SECTOR_SIZE], rootBuffer, SECTOR_SIZE);
   }
 }
