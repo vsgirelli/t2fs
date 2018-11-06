@@ -46,14 +46,8 @@ int recordsPerDir;
 // Maximum records per sector
 int recordsPerSector;
 
-// fat_size initialized with the Superblock data.
-//int fat_size;
-//unsigned int FAT[fat_size];
-// PROBLEMA: eu não posso declarar um vetor com um tamanho definido apenas em
-// tempo de execuao, pq o compilador precisa alocar espaço entre as variáveis
-// globais pra ele. Então ou a gente faz uma lista encadeada (meh) ou a gente só
-// mantém em disco e foda-se
-
+// 32 bits pointers addressing clusters on the disk
+unsigned int *FAT;
 
 // **** Functions's prototypes
 // TODO funão de inicializaão que lê o Superbloco e incializa as variáveis
