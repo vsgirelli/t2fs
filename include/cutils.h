@@ -43,6 +43,8 @@ int initializedT2fs;
 int clusterSize;
 // Maximum records per directory
 int recordsPerDir;
+// Maximum records per sector
+int recordsPerSector;
 
 // fat_size initialized with the Superblock data.
 //int fat_size;
