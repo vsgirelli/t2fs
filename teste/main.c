@@ -512,10 +512,14 @@ void teste(int tstNumber) {
 
 int main()
 {
-    char cmd[] = "/home/vsgirelli/dev/ufrgs/\0";
+    char cmd[] = "/file1.txt\0";
     char *token;
     //int i,n;
     //int flagAchou, flagEncerrar;
+
+    char name[256];
+    identify2(name, 255);
+    //printf("***\n\nGRUPO: %s\n\n***\n\n", name);
 
     token = checkPath(cmd);
     printf("token: %s\n", token);

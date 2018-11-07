@@ -4,14 +4,46 @@
 
 #include "../include/cutils.h"
 
-int initializeT2fs(void);
+int initT2fs(void);
+int initRoot(void);
+int initFat(void);
 int readSuperblock(void);
 char* checkPath(char *path);
 
 /*
+ *  Function that initializes the root dir
+ */
+int initRoot() {
+  // malloc allocates based on the byte count, not on the type, so there is no
+  // need for cast.
+  // All directories occupy ONE cluster
+  root = malloc(clusterSize);
+  unsigned char rootBuffer[SECTOR_SIZE];
+  // reading root's cluster (all of it's sectors, given by SectorsPerCluster)
+  int i;
+  for (i = 0; i < superblock.SectorsPerCluster; i++) {
+    // The initial address is given by the offset in sectors from the DataSectorStart
+    // The offset depends on the amount of SectorsPerCluster and the cluster we
+    // are trying to access.
+    // Thus, starting from the DataSectorStart, and skipping n clusters of size
+    // SectorsPerCluster, we have the sector that initiates the cluster.
+    // Currently, the cluster we are trying to read is the RootDirCluster.
+    int adds = superblock.DataSectorStart + (superblock.RootDirCluster * superblock.SectorsPerCluster);
+    if (read_sector((adds + i), rootBuffer) != 0) {
+      return READ_ERROR;
+    }
+    // memcpy does a binary copy of the data.
+    // Once the root pointer is a Record pointer, we shall read a total of recordsPerSector
+    // in each access to the disk.
+    memcpy((root + (recordsPerSector * i)), rootBuffer, SECTOR_SIZE);
+  }
+  return FUNC_WORKING;
+}
+
+/*
  *  Function that initializes the t2fs
  */
-int initializeT2fs() {
+int initT2fs() {
   if(initializedT2fs) {
     return 0;
   }
@@ -27,41 +59,18 @@ int initializeT2fs() {
   // And the maximum number of records in a dir depends on the cluster size
   // (because a dir occupies one cluster) and the size of the records's struct
 
-  recordsPerDir = clusterSize/SIZE_OF_T2FS_RECORD;
-  //root = (Record*) malloc(clusterSize);
+  recordsPerDir = clusterSize/sizeof(Record);
+  // The maximum number of records in a sector depends on the SECTOR_SIZE and
+  // the size of the record
+  recordsPerSector = SECTOR_SIZE/sizeof(Record);
 
-  root = (Record*) malloc(clusterSize);
-  unsigned char rootBuffer[SECTOR_SIZE];
-
-
-  int i;
-  for (i = 0; i < superblock.SectorsPerCluster; i++) {
-
-    int adds = superblock.DataSectorStart + (superblock.RootDirCluster * superblock.SectorsPerCluster);
-    if (read_sector((adds + i), rootBuffer) != 0){
-        return READ_ERROR;
-    }
-
-    printf("endereço: %d*******\n\n", adds + i);
-
-    memcpy((root + (i * 4)), rootBuffer, SECTOR_SIZE );
-
+  if(initRoot() != 0) {
+    return READ_ERROR;
   }
+  //initFat();
 
-  printf("Reached the end");
-  /*
-  for (i = 0; i < superblock.SectorsPerCluster; i++) {
-    char rootBuffer[SECTOR_SIZE];
-    if (read_sector((superblock.RootDirCluster + 1), rootBuffer) != 0) {
-      return READ_ERROR;
-    }
-    //memcpy(root, rootBuffer, SECTOR_SIZE);
-    //printf("TRYING NOT TO DIE: %c\n\n", rootBuffer);
-    //strncpy(root, (char *)rootBuffer, 1);
-    printf("root.TypeVal: %c\n\n", root->TypeVal);
-    //strncpy(root[i * SECTOR_SIZE], rootBuffer, SECTOR_SIZE);
-  }
-  */
+  return FUNC_WORKING;
+
 }
 
 /*
@@ -106,20 +115,42 @@ int readSuperblock() {
 char* checkPath(char *path) {
   int isAbsolute = (*path == '/');
 
-  initializeT2fs();
+  initT2fs();
   Record *dir;
 
   char *token = malloc(strlen(path) * sizeof(char));
   int tokenSize = sizeof(token);
   memset(token, '\0', tokenSize);
   strcpy(token, path);
+  // The first call to strtok needs the the starting string to scan tokens
+  // The next calls receives a null pointer and uses the position right after the
+  // end of the last token to start scanning for the tokens.
   token = strtok(token, "/");
+  // The first token will be the first dir or file name, whether the path is
+  // absolute or not.
 
   if (isAbsolute) { // If the given path is absolute, starts from the root dir
     dir = root;
   }
   else { // If it is a relative path, starts from the cwd
     dir = cwd;
+  }
+
+  int i = 0;
+  // A NULL pointer is returned at the end of the string
+  while(token != NULL) {
+    // given the dir selected above (based on the path),
+    // now we have to search for the dir record which name equals the token
+    while(strncmp(dir[i].name, token, strlen(token)) != 0 && i < recordsPerDir) {
+      printf("File name: %s\n", dir[i].name);
+      i++;
+    }
+    // at this point, use a flag variable to check if the token was found or not
+    // if it was found, then access the cluster and generates a new token
+    // otherwise, return
+    printf("File name: %s\n", dir[i].name);
+    //strtok again
+    token = strtok(NULL, "/");
   }
 
 
