@@ -9,7 +9,7 @@ int initRoot(void);
 int initFat(void);
 int readSuperblock(void);
 int readDir(Record *dir);
-Record* checkPath(char *path);
+Record* getLastDir(char *path);
 
 /*
  *  Function that initializes the root dir
@@ -107,13 +107,13 @@ int readSuperblock() {
 }
 
 /*
- *  Function that checks if the informed path exists.
+ *  Function that get the last directory from the informed path.
  *  Uses strtok to generate the tokens, and opens the dir's cluster to
  *  check the file's records inside the dir.
  *  If the path exists, returns a pointer to the directory Record,
  *  otherwise, returns a NULL pointer.
  */
-Record* checkPath(char *path) {
+Record* getLastDir(char *path) {
   int isAbsolute = (*path == '/');
 
   initT2fs();
@@ -137,46 +137,40 @@ Record* checkPath(char *path) {
     dir = cwd;
   }
 
-  // count is used to check how many times the path was correctly splited and open
-  int i = 0, count = 0;
+  int i = 0;
   // A NULL pointer is returned at the end of the string
   while(token != NULL) {
-    // given the dir selected above (based on the path),
-    // now we have to search for the dir record which name equals the token
-    while(strncmp(dir[i].name, token, strlen(token)) != 0 && i < recordsPerDir) {
-      i++;
-    }
-    // if found something without reaching the end of the dir
-    if (i < recordsPerDir) {
-      // and it was a TYPEVAL_DIRETORIO
-      count++;
-      // opens the dir
-      // /dir1/text
-      // /dir1/
-      if (dir[i].TypeVal == TYPEVAL_DIRETORIO) {
-        readDir(dir);
-      }
-      printf("First thing in dir1: %s\n", dir[i].name);
-      // and generates the next token
+	  
+	// copy token to a local variable
+	char currentToken[tokenSize];
+	strcpy(currentToken, token);
+	
+	// and generates the next token
       token = strtok(NULL, "/");
-    }
-    else {
-      break;
-      //tem que ser null
-    }
-    printf("File name 3: %s\n", dir[i].name);
+	
+	// it means that we already are in the right dir
+	if(token == NULL)
+	  return dir;
+    else{
+	  // given the dir selected above (based on the path),
+      // now we have to search for the dir record which name equals the token
+      while(strncmp(dir[i].name, token, strlen(token)) != 0 && i < recordsPerDir) {
+        i++;
+      }	
+	  // if found something without reaching the end of the dir
+	  if(i<recordsPerDir){
+		  //it is not a dir
+		  if(dir[i].TypeVal != TYPEVAL_DIRETORIO)
+		    return NULL; // error
+		  else{ // it is a dir
+		    readDir(dir);
+		  }
+	  }
+	  else {
+		  return NULL; //dir not found
+	  }
+	}
   }
-
-  // if the first strtok results in NULL, it means that the desired dir to
-  // create a file in is the root dir, so just return a pointer to the root Record
-  if (count == 0 && isAbsolute) {
-    return root;
-  }
-  else {
-    return dir;
-  }
-
-  return NULL;
 }
 
 
