@@ -53,6 +53,6 @@ unsigned int *FAT;
 // TODO funão de inicializaão que lê o Superbloco e incializa as variáveis
 // necessárias
 
-char* checkPath(char *path);
+Record* checkPath(char *path);
 
 #endif

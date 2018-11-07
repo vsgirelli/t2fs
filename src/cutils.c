@@ -8,7 +8,8 @@ int initT2fs(void);
 int initRoot(void);
 int initFat(void);
 int readSuperblock(void);
-char* checkPath(char *path);
+int readDir(Record *dir);
+Record* checkPath(char *path);
 
 /*
  *  Function that initializes the root dir
@@ -109,8 +110,10 @@ int readSuperblock() {
  *  Function that checks if the informed path exists.
  *  Uses strtok to generate the tokens, and opens the dir's cluster to
  *  check the file's records inside the dir.
+ *  If the path exists, returns a pointer to the directory Record,
+ *  otherwise, returns a NULL pointer.
  */
-char* checkPath(char *path) {
+Record* checkPath(char *path) {
   int isAbsolute = (*path == '/');
 
   initT2fs();
@@ -127,30 +130,64 @@ char* checkPath(char *path) {
   // The first token will be the first dir or file name, whether the path is
   // absolute or not.
 
-  if (isAbsolute) { // If the given path is absolute, starts from the root dir
+  if (isAbsolute) { // If the given path is ABSOLUTE, starts from the root dir
     dir = root;
   }
-  else { // If it is a relative path, starts from the cwd
+  else { // If it is a RELATIVE path, starts from the cwd
     dir = cwd;
   }
 
-  int i = 0;
+  // count is used to check how many times the path was correctly splited and open
+  int i = 0, count = 0;
   // A NULL pointer is returned at the end of the string
   while(token != NULL) {
     // given the dir selected above (based on the path),
     // now we have to search for the dir record which name equals the token
     while(strncmp(dir[i].name, token, strlen(token)) != 0 && i < recordsPerDir) {
-      printf("File name: %s\n", dir[i].name);
       i++;
     }
-    // at this point, use a flag variable to check if the token was found or not
-    // if it was found, then access the cluster and generates a new token
-    // otherwise, return
-    printf("File name: %s\n", dir[i].name);
-    //strtok again
-    token = strtok(NULL, "/");
+    // if found something without reaching the end of the dir
+    if (i < recordsPerDir) {
+      // and it was a TYPEVAL_DIRETORIO
+      count++;
+      // opens the dir
+      // /dir1/text
+      // /dir1/
+      if (dir[i].TypeVal == TYPEVAL_DIRETORIO) {
+        readDir(dir);
+      }
+      printf("First thing in dir1: %s\n", dir[i].name);
+      // and generates the next token
+      token = strtok(NULL, "/");
+    }
+    else {
+      break;
+      //tem que ser null
+    }
+    printf("File name 3: %s\n", dir[i].name);
   }
 
+  // if the first strtok results in NULL, it means that the desired dir to
+  // create a file in is the root dir, so just return a pointer to the root Record
+  if (count == 0 && isAbsolute) {
+    return root;
+  }
+  else {
+    return dir;
+  }
 
-  return token;
+  return NULL;
+}
+
+
+int readDir(Record *dir) {
+  unsigned char buffer[SECTOR_SIZE];
+  int i;
+  for (i = 0; i < superblock.SectorsPerCluster; i++) {
+    int adds = superblock.DataSectorStart + (dir->firstCluster * superblock.SectorsPerCluster);
+    if (read_sector((adds + i), buffer) != 0) {
+      return READ_ERROR;
+    }
+    memcpy((dir + (recordsPerSector * i)), buffer, SECTOR_SIZE);
+  }
 }

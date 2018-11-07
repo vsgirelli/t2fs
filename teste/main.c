@@ -512,8 +512,8 @@ void teste(int tstNumber) {
 
 int main()
 {
-    char cmd[] = "/file1.txt\0";
-    char *token;
+    char cmd[] = "../../texto\0";
+    struct t2fs_record *token;
     //int i,n;
     //int flagAchou, flagEncerrar;
 
@@ -522,7 +522,7 @@ int main()
     //printf("***\n\nGRUPO: %s\n\n***\n\n", name);
 
     token = checkPath(cmd);
-    printf("token: %s\n", token);
+    printf("token: %d\n", token);
     printf("cmd: %s\n", cmd);
 
     /*
