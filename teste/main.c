@@ -512,7 +512,7 @@ void teste(int tstNumber) {
 
 int main()
 {
-    char cmd[] = "../../texto\0";
+    char cmd[] = "../dir1/dir2/\0";
     struct t2fs_record *token;
     //int i,n;
     //int flagAchou, flagEncerrar;
@@ -521,7 +521,7 @@ int main()
     identify2(name, 255);
     //printf("***\n\nGRUPO: %s\n\n***\n\n", name);
 
-    token = checkPath(cmd);
+    token = getLastDir(cmd);
     printf("token: %d\n", token);
     printf("cmd: %s\n", cmd);
 

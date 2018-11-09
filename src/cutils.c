@@ -137,39 +137,52 @@ Record* getLastDir(char *path) {
     dir = cwd;
   }
 
-  int i = 0;
+  int i = 0, found = 0;
   // A NULL pointer is returned at the end of the string
   while(token != NULL) {
-	  
-	// copy token to a local variable
-	char currentToken[tokenSize];
-	strcpy(currentToken, token);
-	
-	// and generates the next token
-      token = strtok(NULL, "/");
-	
-	// it means that we already are in the right dir
-	if(token == NULL)
-	  return dir;
-    else{
-	  // given the dir selected above (based on the path),
+    // copy token to a local variable
+    char currentToken[sizeof(token)];
+    strcpy(currentToken, token);
+
+    // and generates the next token
+    token = strtok(NULL, "/");
+
+    // it means that we already are in the right dir
+    if(token == NULL)
+      return dir;
+    else {
+      // given the dir selected above (based on the path),
       // now we have to search for the dir record which name equals the token
-      while(strncmp(dir[i].name, token, strlen(token)) != 0 && i < recordsPerDir) {
+      while(strncmp(dir[i].name, currentToken, strlen(token)) != 0 && i < recordsPerDir) {
         i++;
-      }	
-	  // if found something without reaching the end of the dir
-	  if(i<recordsPerDir){
-		  //it is not a dir
-		  if(dir[i].TypeVal != TYPEVAL_DIRETORIO)
-		    return NULL; // error
-		  else{ // it is a dir
-		    readDir(dir);
-		  }
-	  }
-	  else {
-		  return NULL; //dir not found
-	  }
-	}
+      }
+      found = 1;
+      // if found something without reaching the end of the dir
+      if(i<recordsPerDir) {
+        // check if the Record is a directory
+        if(dir[i].TypeVal != TYPEVAL_DIRETORIO) {
+          // If the user passes a path which parts are not directories
+          // (except by the last token, that can be a regular file),
+          // then the path is not valid.
+          return NULL; // error
+        }
+        else{ // it is a dir, then read its cluster
+          readDir(dir);
+        }
+      }
+      else {
+        return NULL; //dir not found inside the current dir
+      }
+    }
+  }
+
+  // if the first strtok results in NULL, it means that the desired dir
+  // is the root dir, so just return a pointer to the root Record
+  if (found == 0 && isAbsolute) {
+    return root;
+  }
+  else { // if the path was empty
+    return NULL;
   }
 }
 
