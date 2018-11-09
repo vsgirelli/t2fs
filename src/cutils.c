@@ -64,15 +64,46 @@ int initT2fs() {
   // the size of the record
   recordsPerSector = SECTOR_SIZE/sizeof(Record);
 
+  pointersPerSector = SECTOR_SIZE/sizeof(unsigned int);
+
+  fatSizeInSectors = superblock.DataSectorStart - superblock.pFATSectorStart;
+
   if(initRoot() != 0) {
     return READ_ERROR;
   }
-  //initFat();
+
+  initFat();
 
   return FUNC_WORKING;
 
 }
 
+/*
+*   Function that initializes FAT
+*/
+int initFat() {
+
+    /* I'm FAT and I know it,
+        FAT é um vetor de unsigned int (4 bytes)
+        Começa em pFATSectorStart e termina em DataSectorStart
+    */
+    FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
+
+    unsigned char readBuffer[SECTOR_SIZE];
+
+    int i;
+    for (i = 0; i < fatSizeInSectors; i++) {
+
+        int adds = superblock.pFATSectorStart;
+        if (read_sector((adds + i), readBuffer) != 0) {
+          return READ_ERROR;
+        }
+
+        memcpy((FAT + (pointersPerSector * i)), readBuffer, SECTOR_SIZE);
+    }
+
+    return FUNC_WORKING;
+}
 /*
  *  Function that reads the Superblock from the disk.
  */
