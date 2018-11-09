@@ -67,6 +67,7 @@ int initT2fs() {
   if(initRoot() != 0) {
     return READ_ERROR;
   }
+  cwd = root;
   //initFat();
 
   return FUNC_WORKING;
@@ -153,7 +154,7 @@ Record* getLastDir(char *path) {
     else {
       // given the dir selected above (based on the path),
       // now we have to search for the dir record which name equals the token
-      while(strncmp(dir[i].name, currentToken, strlen(token)) != 0 && i < recordsPerDir) {
+      while(strncmp(dir[i].name, currentToken, strlen(currentToken)) != 0 && i < recordsPerDir) {
         i++;
       }
       found = 1;
