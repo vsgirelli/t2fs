@@ -177,6 +177,7 @@ Record* getLastDir(char *path) {
     }
   }
 
+  free(token);
   // if the first strtok results in NULL, it means that the desired dir
   // is the root dir, so just return a pointer to the root Record
   if (found == 0 && isAbsolute) {
