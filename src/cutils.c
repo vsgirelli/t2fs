@@ -55,6 +55,12 @@ int initT2fs() {
     return READ_ERROR;
   }
 
+  int i;
+  // INITIALIZE OPENEDFILES ARRAY
+  for (i=0; i<MAX_OPEN_FILES; i++){
+    opened_files_map[i] = 0;
+  }
+
   // INITIALIZING VARIABLES FROM THE SUPERBLOCK INFO
   // The cluster size (in bytes) is defined by the SECTOR_SIZE * the number of
   // sectors in a cluster
@@ -225,15 +231,70 @@ Record* getLastDir(char *path) {
   }
 }
 
+
+/*
+ * Function that determines if a file specified by pathname
+ * exists, and returns its pointer.
+ *
+*/
+Record* openFile(char *pathname)
+{
+    Record* fileDir;
+
+    if (( fileDir = getLastDir(pathname) ) == NULL)
+    {
+      printf("No such directory");
+      return NULL;
+    }
+
+    char* file_name = getFileName(pathname);
+    short int  i;
+    for (i=2; i < recordsPerDir; i ++)
+    {
+        if (strcmp(file_name, fileDir[i].name) == 0)
+        {
+            return &fileDir[i];
+        }
+    }
+
+    printf("No such file");
+    return NULL;
+
+
+}
+
+Record* getDir(Record* dir)
+{
+    unsigned char buffer[SECTOR_SIZE];
+    Record * dir_ent = malloc(clusterSize);
+
+    int i;
+    for (i = 0; i < superblock.SectorsPerCluster; i++) {
+    int adds = superblock.DataSectorStart + (dir->firstCluster * superblock.SectorsPerCluster);
+    if (read_sector((adds + i), buffer) != 0) {
+      return NULL;
+    }
+    memcpy((dir_ent + (recordsPerSector * i)), buffer, SECTOR_SIZE);
+    }
+
+    return dir_ent;
+}
+
 /*
  * Function that iterates over the path to get the file name
  * (removing the path)
  */
 char *getFileName(char *path) {
-  char *token = strtok(path, "/");
+  char str[MAX_FILE_NAME_SIZE];
+
+  strncpy(str, path, MAX_FILE_NAME_SIZE);
+
+  char* token = strtok(str, "/");
+
   while (token != NULL && strtok(NULL, "/") != NULL) {
     token = strtok(NULL, "/");
   }
+
   return token;
 }
 
@@ -268,3 +329,5 @@ int readDir(Record *dir) {
 
   return FUNC_WORKING;
 }
+
+

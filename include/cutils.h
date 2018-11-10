@@ -27,6 +27,7 @@ typedef struct open_file {
   long int curr_pointer;    // current position pointer, in bytes
 } oFile;
 
+
 // **** GLOBAL VARIABLES
 // TODO verificar qual o tipo exatamente do nosso working dir
 // Current working directory
@@ -37,6 +38,8 @@ Record *root;
 Superblock superblock;
 // Array with the open files.
 oFile opened_files[MAX_OPEN_FILES];
+// Bitmap for the open files positions
+short int opened_files_map[MAX_OPEN_FILES];
 // Indicates if the t2fs is initialized
 int initializedT2fs;
 // Cluster size, in bytes
@@ -45,6 +48,8 @@ int clusterSize;
 int recordsPerDir;
 // Maximum records per sector
 int recordsPerSector;
+// Number of opened files
+short int numberOfOpenedFiles;
 
 // 32 bits pointers addressing clusters on the disk
 unsigned int *FAT;

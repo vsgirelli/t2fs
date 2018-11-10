@@ -66,7 +66,7 @@ FILE2 create2 (char *filename) {
   // filehandler
   FILE2 file = 0;
 
-  char *name = getFileName(filename); 
+  char *name = getFileName(filename);
   printf("FILENAME: %s\n", name);
   /*
    *  Após achar o path, e verificar que no cwd não há um registro de arquivo
@@ -320,16 +320,52 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o identifi
 	Em caso de erro, será retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
-  initT2fs();
+    initT2fs();
+    if (numberOfOpenedFiles == 10){
+    // Maximum number of files opened
+    printf("Maximum number of opened files reached");
+    return OPEN_ERROR;
+    }
+
+    Record* openedRecord;
+
+    if ( (openedRecord = openFile(pathname)) == NULL)
+    {
+        return OPEN_ERROR;
+    }
+
+    numberOfOpenedFiles += 1;
+    int DIR_HANDLE;
+
+    /*
+        Allocate a struct of oFile type to represent this opened file
+            typedef struct open_file {
+          Record *frecord;     // file record
+          long int curr_pointer;    // current position pointer, in bytes
+        } oFile;
+    */
+
+    oFile openedFile;
+
+    openedFile.curr_pointer =  0;
+    openedFile.frecord = openedRecord;
+
+    for (DIR_HANDLE=0; DIR_HANDLE < MAX_OPEN_FILES; DIR_HANDLE++)
+    {
+        if (opened_files_map[DIR_HANDLE] == 0){
+            opened_files_map[DIR_HANDLE] = 1;
+            opened_files[DIR_HANDLE] = openedFile;
+            break;
+        }
+    }
+
+    return DIR_HANDLE;
   /*
    *  Para abrir um diretório, deve-se percorrer a árvore  de diretórios em
    *  busca da existência do diretório. Isso vale também para arquivos. Então,
    *  pode-se ter uma funcao que, dado um path, verifica se o path é válido ou
    *  não.
    */
-
-  // TODO primeiras funcs a serem feitas
-  return FUNC_NOT_WORKING;
 }
 
 
