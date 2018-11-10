@@ -61,7 +61,7 @@ FILE2 create2 (char *filename) {
 
   Record *dir;
   dir = getLastDir(filename);
-  ls(dir);
+  //ls(dir);
 
   // filehandler
   FILE2 file = 0;

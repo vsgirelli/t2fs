@@ -204,6 +204,7 @@ Record* getLastDir(char *path) {
           return NULL; // error
         }
         else{ // it is a dir, then read its cluster
+          printf("openning\n");
           readDir(dir);
         }
       }
@@ -255,6 +256,7 @@ void ls(Record *dir) {
  */
 int readDir(Record *dir) {
   unsigned char buffer[SECTOR_SIZE];
+  ls(dir);
   int i;
   for (i = 0; i < superblock.SectorsPerCluster; i++) {
     int adds = superblock.DataSectorStart + (dir->firstCluster * superblock.SectorsPerCluster);
