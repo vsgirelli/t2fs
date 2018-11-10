@@ -59,10 +59,10 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 FILE2 create2 (char *filename) {
   initT2fs();
 
-  printf("RELLOU\n");
   Record *dir;
   dir = getLastDir(filename);
-  printf("dir: %d\n", dir);
+  //printf("dir: %d\n", dir);
+  ls(dir);
   /*
    *  Após achar o path, e verificar que no cwd não há um registro de arquivo
    *  com mesmo nome do arquivo que se deseja criar, então cria-se o arquivo.
@@ -75,7 +75,6 @@ FILE2 create2 (char *filename) {
    */
   return FUNC_NOT_WORKING;
 }
-
 
 /*-----------------------------------------------------------------------------
 Função:	Apagar um arquivo do disco.

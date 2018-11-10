@@ -65,9 +65,9 @@ int initT2fs() {
   // the size of the record
   recordsPerSector = SECTOR_SIZE/sizeof(Record);
 
-  pointersPerSector = SECTOR_SIZE/sizeof(unsigned int);
+  //pointersPerSector = SECTOR_SIZE/sizeof(unsigned int);
 
-  fatSizeInSectors = superblock.DataSectorStart - superblock.pFATSectorStart;
+  //fatSizeInSectors = superblock.DataSectorStart - superblock.pFATSectorStart;
 
   if(initRoot() != 0) {
     return READ_ERROR;
@@ -75,19 +75,20 @@ int initT2fs() {
   cwd = root;
   //initFat();
 
+  initializedT2fs = 1;
   return FUNC_WORKING;
 }
 
 /*
 *   Function that initializes FAT
 */
-int initFat() {
+//int initFat() {
 
     /* I'm FAT and I know it,
         FAT é um vetor de unsigned int (4 bytes)
         Começa em pFATSectorStart e termina em DataSectorStart
     */
-    FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
+  /*  FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
 
     unsigned char readBuffer[SECTOR_SIZE];
 
@@ -103,7 +104,7 @@ int initFat() {
     }
 
     return FUNC_WORKING;
-}
+}*/
 
 /*
  *  Function that reads the Superblock from the disk.
@@ -149,7 +150,6 @@ int readSuperblock() {
 Record* getLastDir(char *path) {
   int isAbsolute = (*path == '/');
 
-  initT2fs();
   Record *dir;
 
   char *token = malloc(strlen(path) * sizeof(char));
@@ -220,7 +220,23 @@ Record* getLastDir(char *path) {
   }
 }
 
+/*
+ *  Function that prints on the screen the informed dir.
+ */
+void ls(Record *dir) {
+  int i = 0;
+  while(i < recordsPerDir) {
+    if (dir[i].TypeVal != TYPEVAL_INVALIDO) {
+      printf("**********************************************************\n");
+      printf("Type: %x\nName: %s\nSize (bytes): %d\nSize (clusters): %d\nFirst cluster: %d\n", dir[i].TypeVal, dir[i].name, dir[i].bytesFileSize, dir[i].clustersFileSize, dir[i].firstCluster);
+    }
+    i++;
+  }
+}
 
+/*
+ *  Function that reads the sectors of a Directory
+ */
 int readDir(Record *dir) {
   unsigned char buffer[SECTOR_SIZE];
   int i;
@@ -231,4 +247,6 @@ int readDir(Record *dir) {
     }
     memcpy((dir + (recordsPerSector * i)), buffer, SECTOR_SIZE);
   }
+
+  return FUNC_WORKING;
 }
