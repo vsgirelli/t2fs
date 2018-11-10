@@ -17,7 +17,7 @@
 typedef struct t2fs_record Record;
 typedef struct t2fs_superbloco Superblock;
 
-/* 
+/*
  * Datatype defined for the open files.
  * Contains the file record on the directory
  * and the current pointer position, in bytes.
@@ -48,6 +48,13 @@ int recordsPerSector;
 
 // 32 bits pointers addressing clusters on the disk
 unsigned int *FAT;
+
+// number of fat pointers per sector
+unsigned int pointersPerSector;
+
+// fat size in sectors
+unsigned int fatSizeInSectors;
+
 
 // **** Functions's prototypes
 // TODO funão de inicializaão que lê o Superbloco e incializa as variáveis

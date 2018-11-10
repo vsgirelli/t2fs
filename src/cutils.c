@@ -67,15 +67,15 @@ int initT2fs() {
   // the size of the record
   recordsPerSector = SECTOR_SIZE/sizeof(Record);
 
-  //pointersPerSector = SECTOR_SIZE/sizeof(unsigned int);
+  pointersPerSector = SECTOR_SIZE/sizeof(unsigned int);
 
-  //fatSizeInSectors = superblock.DataSectorStart - superblock.pFATSectorStart;
+  fatSizeInSectors = superblock.DataSectorStart - superblock.pFATSectorStart;
 
   if(initRoot() != 0) {
     return READ_ERROR;
   }
   cwd = root;
-  //initFat();
+  initFat();
 
   initializedT2fs = 1;
   return FUNC_WORKING;
@@ -84,13 +84,13 @@ int initT2fs() {
 /*
 *   Function that initializes FAT
 */
-//int initFat() {
+int initFat() {
 
     /* I'm FAT and I know it,
         FAT é um vetor de unsigned int (4 bytes)
         Começa em pFATSectorStart e termina em DataSectorStart
     */
-  /*  FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
+   FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
 
     unsigned char readBuffer[SECTOR_SIZE];
 
@@ -106,7 +106,7 @@ int initT2fs() {
     }
 
     return FUNC_WORKING;
-}*/
+}
 
 /*
  *  Function that reads the Superblock from the disk.
