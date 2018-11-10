@@ -61,8 +61,13 @@ FILE2 create2 (char *filename) {
 
   Record *dir;
   dir = getLastDir(filename);
-  //printf("dir: %d\n", dir);
   ls(dir);
+
+  // filehandler
+  FILE2 file = 0;
+
+  char *name = getFileName(filename); 
+  printf("FILENAME: %s\n", name);
   /*
    *  Após achar o path, e verificar que no cwd não há um registro de arquivo
    *  com mesmo nome do arquivo que se deseja criar, então cria-se o arquivo.
@@ -73,7 +78,10 @@ FILE2 create2 (char *filename) {
    *  na FAT, altero a entrada da FAT, e devo criar um registro no cwd.
    *  Lembrar do current_pointer setado em 0.
    */
-  return FUNC_NOT_WORKING;
+  if (!file) {
+    return CREATE_FILE_ERROR;
+  }
+  return file;
 }
 
 /*-----------------------------------------------------------------------------

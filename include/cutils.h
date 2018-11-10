@@ -56,5 +56,6 @@ unsigned int *FAT;
 Record* getLastDir(char *path);
 int initT2fs(void);
 void ls(Record *dir);
+char *getFileName(char *path);
 
 #endif

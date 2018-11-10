@@ -10,6 +10,8 @@ int initFat(void);
 int readSuperblock(void);
 int readDir(Record *dir);
 Record* getLastDir(char *path);
+char *getFileName(char *path);
+void ls(Record *dir);
 
 /*
  *  Function that initializes the root dir
@@ -163,6 +165,7 @@ Record* getLastDir(char *path) {
   // The first token will be the first dir or file name, whether the path is
   // absolute or not.
 
+
   if (isAbsolute) { // If the given path is ABSOLUTE, starts from the root dir
     dir = root;
   }
@@ -175,14 +178,15 @@ Record* getLastDir(char *path) {
   while(token != NULL) {
     // copy token to a local variable
     char currentToken[sizeof(token)];
-    strcpy(currentToken, token);
+    strncpy(currentToken, token, sizeof(token));
 
     // and generates the next token
     token = strtok(NULL, "/");
 
     // it means that we already are in the right dir
-    if(token == NULL)
+    if(token == NULL) {
       return dir;
+    }
     else {
       // given the dir selected above (based on the path),
       // now we have to search for the dir record which name equals the token
@@ -218,6 +222,18 @@ Record* getLastDir(char *path) {
   else { // if the path was empty
     return NULL;
   }
+}
+
+/*
+ * Function that iterates over the path to get the file name
+ * (removing the path)
+ */
+char *getFileName(char *path) {
+  char *token = strtok(path, "/");
+  while (token != NULL && strtok(NULL, "/") != NULL) {
+    token = strtok(NULL, "/");
+  }
+  return token;
 }
 
 /*
