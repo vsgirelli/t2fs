@@ -323,8 +323,8 @@ DIR2 opendir2 (char *pathname) {
     initT2fs();
     if (numberOfOpenedFiles == 10){
     // Maximum number of files opened
-    printf("Maximum number of opened files reached");
-    return OPEN_ERROR;
+        printf("Maximum number of opened files reached");
+        return OPEN_ERROR;
     }
 
     Record* openedRecord;
@@ -336,13 +336,8 @@ DIR2 opendir2 (char *pathname) {
 
     numberOfOpenedFiles += 1;
     int DIR_HANDLE;
-
     /*
         Allocate a struct of oFile type to represent this opened file
-            typedef struct open_file {
-          Record *frecord;     // file record
-          long int curr_pointer;    // current position pointer, in bytes
-        } oFile;
     */
 
     oFile openedFile;
@@ -350,22 +345,11 @@ DIR2 opendir2 (char *pathname) {
     openedFile.curr_pointer =  0;
     openedFile.frecord = openedRecord;
 
-    for (DIR_HANDLE=0; DIR_HANDLE < MAX_OPEN_FILES; DIR_HANDLE++)
-    {
-        if (opened_files_map[DIR_HANDLE] == 0){
-            opened_files_map[DIR_HANDLE] = 1;
-            opened_files[DIR_HANDLE] = openedFile;
-            break;
-        }
-    }
+    DIR_HANDLE = getNextHandleNum();
+
+    opened_files[DIR_HANDLE] = openedFile;
 
     return DIR_HANDLE;
-  /*
-   *  Para abrir um diretório, deve-se percorrer a árvore  de diretórios em
-   *  busca da existência do diretório. Isso vale também para arquivos. Então,
-   *  pode-se ter uma funcao que, dado um path, verifica se o path é válido ou
-   *  não.
-   */
 }
 
 
@@ -386,10 +370,16 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero ( e "dentry" não será válido)
 -----------------------------------------------------------------------------*/
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
-  initT2fs();
+    initT2fs();
 
-  // TODO primeiras funcs a serem feitas
-  return FUNC_NOT_WORKING;
+    oFile dirRecord;
+
+    dirRecord = opened_files[handle];
+
+    Record* dirContent;
+
+    dirContent =  (Record *) readCluster(dirRecord.frecord->firstCluster);
+    return FUNC_NOT_WORKING;
 }
 
 

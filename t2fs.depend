@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1541873552 source:/home/aluno/T2/t2fs/src/cutils.c
+1541888714 source:/home/aluno/T2/t2fs/src/cutils.c
 	"../include/cutils.h"
 
-1541873526 /home/aluno/T2/t2fs/include/cutils.h
+1541887029 /home/aluno/T2/t2fs/include/cutils.h
 	<string.h>
 	<stdlib.h>
 	<stdio.h>
@@ -12,14 +12,14 @@
 
 1541861667 /home/aluno/T2/t2fs/include/t2fs.h
 
-1541872482 /home/aluno/T2/t2fs/include/config.h
+1541886370 /home/aluno/T2/t2fs/include/config.h
 
 1541861667 /home/aluno/T2/t2fs/include/apidisk.h
 
-1541873909 source:/home/aluno/T2/t2fs/src/t2fs.c
+1541890841 source:/home/aluno/T2/t2fs/src/t2fs.c
 	"../include/cutils.h"
 
-1541873938 source:/home/aluno/T2/t2fs/exemplo/main.c
+1541889082 source:/home/aluno/T2/t2fs/exemplo/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>

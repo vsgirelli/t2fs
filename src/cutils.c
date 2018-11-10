@@ -263,9 +263,47 @@ Record* openFile(char *pathname)
 
 }
 
-Record* getDir(Record* dir)
+/*
+ * This function returns the next free handle
+ *
+ */
+int getNextHandleNum(){
+
+    int handle;
+    for (handle=0; handle < MAX_OPEN_FILES; handle++)
+    {
+        if (opened_files_map[handle] == 0){
+            return handle;
+        }
+    }
+
+    return NO_FREE_HANDLES;
+
+}
+
+char * readCluster(int clusterNumber){
+
+    char* cluster = malloc(clusterSize);
+
+    unsigned char readBuffer[SECTOR_SIZE];
+
+    int i;
+    for (i = 0; i < superblock.SectorsPerCluster; i++) {
+
+        int adds = superblock.DataSectorStart + (clusterNumber * superblock.SectorsPerCluster);
+        if (read_sector((adds + i), readBuffer) != 0) {
+          return NULL;
+        }
+
+        memcpy((cluster + (SECTOR_SIZE * i)), readBuffer, SECTOR_SIZE);
+    }
+
+    return cluster;
+}
+
+DIRENT2* getDirEnt(Record* dir)
 {
-    unsigned char buffer[SECTOR_SIZE];
+    /*unsigned char buffer[SECTOR_SIZE];
     Record * dir_ent = malloc(clusterSize);
 
     int i;
@@ -277,7 +315,9 @@ Record* getDir(Record* dir)
     memcpy((dir_ent + (recordsPerSector * i)), buffer, SECTOR_SIZE);
     }
 
-    return dir_ent;
+    return dir_ent;*/
+
+    return NULL;
 }
 
 /*

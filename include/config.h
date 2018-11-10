@@ -17,6 +17,7 @@
 #define CREATE_FILE_ERROR -5
 #define OPEN_ERROR -6
 #define NO_SUCH_FILE -7
+#define NO_FREE_HANDLES 8
 
 #define MAX_OPEN_FILES 10
 

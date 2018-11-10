@@ -514,6 +514,8 @@ int main()
     int dirHandle;
 
     dirHandle = opendir2("/dir1");
+    DIRENT2 dirent[50];
+    readdir2(dirHandle, dirent);
     printf("OOk");
    /* char cmd[256];
     char *token;
