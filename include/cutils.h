@@ -54,5 +54,6 @@ unsigned int *FAT;
 // necessárias
 
 Record* getLastDir(char *path);
+int initT2fs(void);
 
 #endif

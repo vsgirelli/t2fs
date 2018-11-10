@@ -10,7 +10,6 @@
 
 #include "../include/cutils.h"
 
-
 /*-----------------------------------------------------------------------------
 Função: Usada para identificar os desenvolvedores do T2FS.
 	Essa função copia um string de identificação para o ponteiro indicado por "name".
@@ -28,6 +27,7 @@ int identify2 (char *name, int size) {
   // 00 representa o null character
   // char* componentes = "4C 65 61 6E 64 72 6F 20 50 65 72 65 69 72 61 20 2D 20 30 30 32 37 33 31 31 34 5C 6E 50 65 64 72 6F 20 54 72 69 6E 64 61 64 65 20 2D 20 30 30 32 36 34 38 34 36 5C 6E 56 61 6C 65 72 69 61 20 47 69 72 65 6C 6C 69 20 2D 20 30 30 32 36 31 35 39 36 00";
 
+  initT2fs();
   char *componentes = "Leandro Pereira - 00273114\nPedro Trindade - 00264846\nVal�ria S. Girelli - 00261596\n";
 
   if (strlen(componentes) > size)
@@ -57,21 +57,13 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
   * O path pode ser absoluto ou relativo.
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
+  initT2fs();
+
+  printf("RELLOU\n");
+  Record *dir;
+  dir = getLastDir(filename);
+  printf("dir: %d\n", dir);
   /*
-   *  Primeiro precisa-se verificar a existência do path, ou seja, das pastas
-   *  que compõem o path (relativo ou absoluto).
-   *  Pra isso, deve-se:
-   *  1 - abrir cada diretório e
-   *  2 - ler as entradas do diretório
-   *  Então, a cada parte do path, tenho que chamar a splitPath, para pegar a
-   *  parte do path que deve ser analisada:
-   *  /home/vsgirelli/ufrgs/sisop/t2fs/
-   *  Como comeca com /, tenho que abrir o root, e ler os regs do root.
-   *  Primeiro splito pegando home. Verifico se existe algum registro de root
-   *  com nome home.
-   *  Se sim, fecho root e abro o cluster de home, lendo os registro e ....
-   *  Assim, preciso chamar as demais funcs de dir. Elas precisam ser as
-   *  primeiras a ser implementadas.
    *  Após achar o path, e verificar que no cwd não há um registro de arquivo
    *  com mesmo nome do arquivo que se deseja criar, então cria-se o arquivo.
    *  Para criar o arquivo é necessário encontrar um cluster que esteja livre.
@@ -95,6 +87,8 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int delete2 (char *filename) {
+  initT2fs();
+
 
   return FUNC_NOT_WORKING;
 }
@@ -115,6 +109,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 	Em caso de erro, deve ser retornado um valor negativo
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
@@ -129,6 +124,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int close2 (FILE2 handle) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
@@ -149,6 +145,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o número 
 	Em caso de erro, será retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int read2 (FILE2 handle, char *buffer, int size) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
@@ -168,6 +165,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o número 
 	Em caso de erro, será retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 int write2 (FILE2 handle, char *buffer, int size) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
@@ -186,6 +184,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int truncate2 (FILE2 handle) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
@@ -206,6 +205,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int seek2 (FILE2 handle, DWORD offset) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
@@ -225,6 +225,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int mkdir2 (char *pathname) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
@@ -247,6 +248,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
+  initT2fs();
   // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
 }
@@ -266,6 +268,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 		Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
+  initT2fs();
 
   // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
@@ -288,6 +291,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 		Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int getcwd2 (char *pathname, int size) {
+  initT2fs();
 
   // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
@@ -309,6 +313,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o identifi
 	Em caso de erro, será retornado um valor negativo.
 -----------------------------------------------------------------------------*/
 DIR2 opendir2 (char *pathname) {
+  initT2fs();
   /*
    *  Para abrir um diretório, deve-se percorrer a árvore  de diretórios em
    *  busca da existência do diretório. Isso vale também para arquivos. Então,
@@ -338,6 +343,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero ( e "dentry" não será válido)
 -----------------------------------------------------------------------------*/
 int readdir2 (DIR2 handle, DIRENT2 *dentry) {
+  initT2fs();
 
   // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
@@ -354,6 +360,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int closedir2 (DIR2 handle) {
+  initT2fs();
 
   // TODO primeiras funcs a serem feitas
   return FUNC_NOT_WORKING;
@@ -371,6 +378,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int ln2(char *linkname, char *filename) {
+  initT2fs();
 
   return FUNC_NOT_WORKING;
 }
