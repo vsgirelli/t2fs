@@ -290,13 +290,27 @@ Record* openFile(char *pathname)
       return NULL;
     }
 
+    // Goes through the file's dir to search for the file
     char* file_name = getFileName(pathname);
     short int  i;
     for (i=2; i < recordsPerDir; i ++)
     {
+        // Found the file, now we must check if it's a link
         if (strcmp(file_name, fileDir[i].name) == 0)
         {
-            return &fileDir[i];
+            // It's a bloody link, we read the link's content
+            // and open the respective file
+            if (fileDir[i].TypeVal == 3) {
+
+                char* linkContent = readCluster(fileDir[i].firstCluster);
+                return openFile(linkContent);
+
+            }
+            else {
+
+                return &fileDir[i];
+
+            }
         }
     }
     printf("No such file");

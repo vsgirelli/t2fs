@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1541934748 source:/home/aluno/T2/t2fs/src/cutils.c
+1541957673 source:/home/aluno/T2/t2fs/src/cutils.c
 	"../include/cutils.h"
 
 1541934125 /home/aluno/T2/t2fs/include/cutils.h
@@ -25,7 +25,7 @@
 	<string.h>
 	"../include/t2fs.h"
 
-1541934546 source:/home/aluno/T2/t2fs/teste/main.c
+1541956855 source:/home/aluno/T2/t2fs/teste/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>

@@ -526,7 +526,7 @@ int main()
     //printf("token: %d\n", token);
     //printf("cmd: %s\n", cmd);
 
-    fhandle = open2("/dir1/file1.txt");
+    fhandle = open2("/link1");
 
     printf("%d\n", fhandle);
     freeIndex = getNextFreeFATIndex();
