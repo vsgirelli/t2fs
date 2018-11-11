@@ -92,11 +92,15 @@ int initT2fs() {
 */
 int initFat() {
 
+
+    currentFreeFATIndex = 0;
+    lastFATIndex = (fatSizeInSectors  * pointersPerSector) - 1;
+
     /* I'm FAT and I know it,
         FAT é um vetor de unsigned int (4 bytes)
         Começa em pFATSectorStart e termina em DataSectorStart
     */
-   FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
+    FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
 
     unsigned char readBuffer[SECTOR_SIZE];
 
@@ -114,6 +118,46 @@ int initFat() {
     return FUNC_WORKING;
 }
 
+/*
+ * Searches for the next free FAT cluster
+ */
+unsigned int getNextFreeFATIndex()
+{
+    // This flag determines if all FAT indexes where searched
+    short int scanComplete = 0;
+    // This flag determines if we reseted the Index to search from the beginning
+    short int reseted = 0;
+
+    unsigned int start = currentFreeFATIndex;
+
+    while (FAT[currentFreeFATIndex] != 0 && scanComplete == 0)
+    {
+
+
+        if (currentFreeFATIndex == start && reseted == 1)
+        {
+            scanComplete = 1;
+        }
+
+        if (currentFreeFATIndex == lastFATIndex) {
+
+            currentFreeFATIndex = 0;
+            reseted = 1;
+
+        }
+
+        currentFreeFATIndex += 1;
+
+    }
+
+    if (scanComplete == 1)
+    {
+        return NO_FREE_INDEXES;
+    }
+
+    return currentFreeFATIndex;
+
+}
 /*
  *  Function that reads the Superblock from the disk.
  */
@@ -231,10 +275,9 @@ Record* getLastDir(char *path) {
   }
 }
 
-
 /*
  * Function that determines if a file specified by pathname
- * exists, and returns its pointer.
+ * exists, opens it and returns its pointer.
  *
 */
 Record* openFile(char *pathname)
@@ -280,6 +323,10 @@ int getNextHandleNum(){
 
 }
 
+/*
+ * Given a cluster number this functions reads it, allocates memory to store it
+ * and returns its pointer.
+ */
 char * readCluster(int clusterNumber){
 
     char* cluster = malloc(clusterSize);
@@ -300,6 +347,10 @@ char * readCluster(int clusterNumber){
     return cluster;
 }
 
+/*
+ * Given a dir Record, this function reads its entries
+ * and returns them in a DIRENT format.
+ */
 DIRENT2* getDirEnt(Record* dir)
 {
     /*unsigned char buffer[SECTOR_SIZE];
