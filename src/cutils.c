@@ -12,6 +12,8 @@ int readDir(Record *dir);
 Record* getLastDir(char *path);
 char *getFileName(char *path);
 void ls(Record *dir);
+DWORD getNextFreeFATIndex(void);
+void writeCluster(char *buffer, int clusterNumber);
 
 /*
  *  Function that initializes the root dir
@@ -73,7 +75,7 @@ int initT2fs() {
   // the size of the record
   recordsPerSector = SECTOR_SIZE/sizeof(Record);
 
-  pointersPerSector = SECTOR_SIZE/sizeof(unsigned int);
+  pointersPerSector = SECTOR_SIZE/sizeof(DWORD);
 
   fatSizeInSectors = superblock.DataSectorStart - superblock.pFATSectorStart;
 
@@ -91,8 +93,6 @@ int initT2fs() {
 *   Function that initializes FAT
 */
 int initFat() {
-
-
     currentFreeFATIndex = 0;
     lastFATIndex = (fatSizeInSectors  * pointersPerSector) - 1;
 
@@ -103,7 +103,6 @@ int initFat() {
     FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
 
     unsigned char readBuffer[SECTOR_SIZE];
-
     int i;
     for (i = 0; i < fatSizeInSectors; i++) {
 
@@ -111,7 +110,6 @@ int initFat() {
         if (read_sector((adds + i), readBuffer) != 0) {
           return READ_ERROR;
         }
-
         memcpy((FAT + (pointersPerSector * i)), readBuffer, SECTOR_SIZE);
     }
 
@@ -121,43 +119,35 @@ int initFat() {
 /*
  * Searches for the next free FAT cluster
  */
-unsigned int getNextFreeFATIndex()
-{
+DWORD getNextFreeFATIndex() {
     // This flag determines if all FAT indexes where searched
     short int scanComplete = 0;
     // This flag determines if we reseted the Index to search from the beginning
     short int reseted = 0;
 
-    unsigned int start = currentFreeFATIndex;
+    DWORD start = currentFreeFATIndex;
 
     while (FAT[currentFreeFATIndex] != 0 && scanComplete == 0)
     {
-
-
         if (currentFreeFATIndex == start && reseted == 1)
         {
             scanComplete = 1;
         }
-
         if (currentFreeFATIndex == lastFATIndex) {
 
             currentFreeFATIndex = 0;
             reseted = 1;
-
         }
-
         currentFreeFATIndex += 1;
-
     }
-
     if (scanComplete == 1)
     {
         return NO_FREE_INDEXES;
     }
 
     return currentFreeFATIndex;
-
 }
+
 /*
  *  Function that reads the Superblock from the disk.
  */
@@ -215,7 +205,6 @@ Record* getLastDir(char *path) {
   // The first token will be the first dir or file name, whether the path is
   // absolute or not.
 
-
   if (isAbsolute) { // If the given path is ABSOLUTE, starts from the root dir
     dir = root;
   }
@@ -254,8 +243,7 @@ Record* getLastDir(char *path) {
           return NULL; // error
         }
         else{ // it is a dir, then read its cluster
-          printf("openning\n");
-          readDir(dir);
+          dir = (Record *) readCluster(dir[i].firstCluster);
         }
       }
       else {
@@ -278,15 +266,13 @@ Record* getLastDir(char *path) {
 /*
  * Function that determines if a file specified by pathname
  * exists, opens it and returns its pointer.
- *
 */
-Record* openFile(char *pathname)
-{
+Record* openFile(char *pathname) {
     Record* fileDir;
 
     if (( fileDir = getLastDir(pathname) ) == NULL)
     {
-      printf("No such directory");
+      printf("No such directory\n");
       return NULL;
     }
 
@@ -296,35 +282,27 @@ Record* openFile(char *pathname)
     for (i=2; i < recordsPerDir; i ++)
     {
         // Found the file, now we must check if it's a link
-        if (strcmp(file_name, fileDir[i].name) == 0)
+        if (strncmp(file_name, fileDir[i].name, sizeof(file_name)) == 0)
         {
             // It's a bloody link, we read the link's content
             // and open the respective file
-            if (fileDir[i].TypeVal == 3) {
-
+            if (fileDir[i].TypeVal == TYPEVAL_LINK) {
                 char* linkContent = readCluster(fileDir[i].firstCluster);
                 return openFile(linkContent);
-
             }
             else {
-
                 return &fileDir[i];
-
             }
         }
     }
-    printf("No such file");
+    printf("No such file\n");
     return NULL;
-
-
 }
 
 /*
  * This function returns the next free handle
- *
  */
 int getNextHandleNum(){
-
     int handle;
     for (handle=0; handle < MAX_OPEN_FILES; handle++)
     {
@@ -334,7 +312,6 @@ int getNextHandleNum(){
     }
 
     return NO_FREE_HANDLES;
-
 }
 
 /*
@@ -342,9 +319,7 @@ int getNextHandleNum(){
  * and returns its pointer.
  */
 char * readCluster(int clusterNumber){
-
     char* cluster = malloc(clusterSize);
-
     unsigned char readBuffer[SECTOR_SIZE];
 
     int i;
@@ -354,13 +329,42 @@ char * readCluster(int clusterNumber){
         if (read_sector((adds + i), readBuffer) != 0) {
           return NULL;
         }
-
         memcpy((cluster + (SECTOR_SIZE * i)), readBuffer, SECTOR_SIZE);
     }
 
     return cluster;
 }
 
+/*
+ *  Writes a cluster on the disk.
+ */
+void writeCluster(char *buffer, int clusterNumber) {
+  // open the parent Directory
+  //Record *parent = (Record *) readCluster(buffer[1].firstCluster);
+//  char *dirName = getDirName(path);
+
+}
+/*
+char *getFileRecord(char *path) {
+  char *occurr = path;
+  int count = 0;
+  // counts the number of occurrences of '/'
+  while (occurr != NULL) {
+    occurr = strchr(occurr, '/');
+    if(occurr) {
+      count++;
+      occurr++;
+    }
+  }
+  occurr = strtok(path, "/");
+  for (int i = 0; i < (count - 1); i++) {
+    occurr = strtok(NULL, "/");
+  }
+
+
+  return NULL;
+}
+*/
 /*
  * Given a dir Record, this function reads its entries
  * and returns them in a DIRENT format.
@@ -389,19 +393,17 @@ DIRENT2* getDirEnt(Record* dir)
  * (removing the path)
  */
 char *getFileName(char *path) {
-
     char* pathCopy = strdup(path);
 
     char *last = strrchr(pathCopy, '/');
-
     if (last != NULL && (last + 1) != '\0')
     {
         return (last + 1);
     } else {
-
-        return OPEN_ERROR;
-
+        return NULL;
     }
+
+    return NULL;
 }
 
 /*

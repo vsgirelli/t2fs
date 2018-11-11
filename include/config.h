@@ -22,4 +22,8 @@
 
 #define MAX_OPEN_FILES 10
 
+#define FAT_FREE_CLUSTER 0x00000000
+#define FAT_BAD_CLUSTER 0xFFFFFFFE
+#define FAT_EOF 0xFFFFFFFF
+
 #endif
