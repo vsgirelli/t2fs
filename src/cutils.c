@@ -300,7 +300,7 @@ Record* openFile(char *pathname)
         {
             // It's a bloody link, we read the link's content
             // and open the respective file
-            if (fileDir[i].TypeVal == 3) {
+            if (fileDir[i].TypeVal == TYPEVAL_LINK) {
 
                 char* linkContent = readCluster(fileDir[i].firstCluster);
                 return openFile(linkContent);

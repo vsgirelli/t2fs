@@ -145,7 +145,7 @@ FILE2 open2 (char *filename) {
     FILE_HANDLE = getNextHandleNum();
 
     opened_files[FILE_HANDLE] = openedFile;
-
+    opened_files_map[FILE_HANDLE] = 1;
     return FILE_HANDLE;
 }
 
@@ -159,9 +159,16 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int close2 (FILE2 handle) {
-  initT2fs();
+    initT2fs();
 
-  return FUNC_NOT_WORKING;
+    if (opened_files_map[handle] == 0)
+    {
+        return NO_SUCH_FILE;
+    }
+
+    opened_files_map[handle] = 1;
+
+    return FUNC_WORKING;
 }
 
 
@@ -376,6 +383,7 @@ DIR2 opendir2 (char *pathname) {
     DIR_HANDLE = getNextHandleNum();
 
     opened_files[DIR_HANDLE] = openedFile;
+    opened_files_map[DIR_HANDLE] = 1;
 
     return DIR_HANDLE;
 }
@@ -407,7 +415,15 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry) {
     Record* dirContent;
 
     dirContent =  (Record *) readCluster(dirRecord.frecord->firstCluster);
-    return FUNC_NOT_WORKING;
+
+ //   long int curPtr = dirRecord.frecord.curr_pointer;
+ //   strncpy(dentry[j].name, dirContent[j].name, strlen(dirContent[j].name));
+ //   dentry[j].fileType = dirContent[j].TypeVal;
+ //   dentry[j].fileSize = dirContent[j].bytesFileSize;
+
+//    dirRecord.frecord.curr_pointer +=1;
+
+    return FUNC_WORKING;
 }
 
 
@@ -421,10 +437,16 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int closedir2 (DIR2 handle) {
-  initT2fs();
+    initT2fs();
 
-  // TODO primeiras funcs a serem feitas
-  return FUNC_NOT_WORKING;
+    if (opened_files_map[handle] == 0)
+    {
+        return NO_SUCH_FILE;
+    }
+
+    opened_files_map[handle] = 1;
+
+    return FUNC_WORKING;
 }
 
 
