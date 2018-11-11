@@ -116,9 +116,37 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 	Em caso de erro, deve ser retornado um valor negativo
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
-  initT2fs();
+    initT2fs();
 
-  return FUNC_NOT_WORKING;
+    if (numberOfOpenedFiles == 10){
+    // Maximum number of files opened
+        printf("Maximum number of opened files reached");
+        return OPEN_ERROR;
+    }
+
+    Record* openedRecord;
+
+    if ( (openedRecord = openFile(filename)) == NULL)
+    {
+        return OPEN_ERROR;
+    }
+
+    numberOfOpenedFiles += 1;
+    int FILE_HANDLE;
+    /*
+        Allocate a struct of oFile type to represent this opened file
+    */
+
+    oFile openedFile;
+
+    openedFile.curr_pointer =  0;
+    openedFile.frecord = openedRecord;
+
+    FILE_HANDLE = getNextHandleNum();
+
+    opened_files[FILE_HANDLE] = openedFile;
+
+    return FILE_HANDLE;
 }
 
 

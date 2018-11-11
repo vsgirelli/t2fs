@@ -256,7 +256,6 @@ Record* openFile(char *pathname)
             return &fileDir[i];
         }
     }
-
     printf("No such file");
     return NULL;
 
@@ -325,17 +324,19 @@ DIRENT2* getDirEnt(Record* dir)
  * (removing the path)
  */
 char *getFileName(char *path) {
-  char str[MAX_FILE_NAME_SIZE];
 
-  strncpy(str, path, MAX_FILE_NAME_SIZE);
+    char* pathCopy = strdup(path);
 
-  char* token = strtok(str, "/");
+    char *last = strrchr(pathCopy, '/');
 
-  while (token != NULL && strtok(NULL, "/") != NULL) {
-    token = strtok(NULL, "/");
-  }
+    if (last != NULL && (last + 1) != '\0')
+    {
+        return (last + 1);
+    } else {
 
-  return token;
+        return OPEN_ERROR;
+
+    }
 }
 
 /*

@@ -512,11 +512,15 @@ void teste(int tstNumber) {
 int main()
 {
     int dirHandle;
+    int fileHandle;
 
-    dirHandle = opendir2("/dir1");
-    DIRENT2 dirent[50];
-    readdir2(dirHandle, dirent);
-    printf("OOk");
+    //dirHandle = opendir2("/dir1");
+    //DIRENT2 dirent[50];
+    //readdir2(dirHandle, dirent);
+    //printf("OOk");
+
+    fileHandle = open2("./dir1/../dir1/file1.txt");
+    printf("ok2");
    /* char cmd[256];
     char *token;
     int i,n;
