@@ -513,14 +513,14 @@ void teste(int tstNumber) {
 int main()
 {
     char cmd[] = "/create1.txt";
-    struct t2fs_record *token;
-
-    char cmd[256];
     char *token;
     int i,n;
     int flagAchou, flagEncerrar;
 
-    printf ("Testing for T2FS - v 2018.1.2\n");
+    int handler = create2(cmd);
+    printf("FILE HANDLER: %d\n", handler);
+
+    /*printf ("Testing for T2FS - v 2018.1.2\n");
     //token = strtok("who"," \t");
     strcpy(cmd, "man");
     token = strtok(cmd," \t");
