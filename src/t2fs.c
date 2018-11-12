@@ -225,6 +225,61 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o número 
 int read2 (FILE2 handle, char *buffer, int size) {
   initT2fs();
 
+  //printf("%d", opened_files_map[handle]);
+
+  // check if it is opened
+  if(opened_files_map[handle] == 0)
+    return READ_ERROR;
+
+  Record *rec = opened_files[handle].frecord;
+  // trying to read a size greater than the record
+  if(size + opened_files[handle].curr_pointer > rec->bytesFileSize)
+    return READ_ERROR;
+
+  // get first cluster
+  DWORD clusterToRead = rec->firstCluster;
+
+  if(FAT[clusterToRead] == 0xFFFFFFFE)
+    return READ_ERROR;
+
+  // int division -> return flow
+  // don't need to round up, beacause we are reading the first one out side the for
+  int numberOfclusterToRead = size / clusterSize;
+  printf("\n numero de cluster para ler: %d", numberOfclusterToRead);
+
+  // get the first cluster according to the curr_pointer, skipping when size is greater than cluster size
+  int numberOfClusterToSkip = opened_files[handle].curr_pointer / clusterSize;
+  int j;
+  for(j=0;j<numberOfClusterToSkip;j++){
+    clusterToRead = FAT[clusterToRead];
+    if(FAT[clusterToRead] == 0xFFFFFFFE)
+      return READ_ERROR;
+  }
+  printf("\n numero de cluster para ler: %d", numberOfClusterToSkip);
+
+  // read the first cluster out of the for
+  char *clusterVal = readCluster(clusterToRead);
+  memcpy(clusterVal + opened_files[handle].curr_pointer , buffer, size - clusterSize * numberOfclusterToRead);
+
+  int i;
+  for (i=0;i<numberOfclusterToRead - numberOfClusterToSkip;i++){
+    clusterVal = readCluster(clusterToRead);
+    // if it is the last cluster, copy just the necessary size
+    if(numberOfclusterToRead - numberOfClusterToSkip == i-1){
+      memcpy(clusterVal, buffer + (clusterSize*i), size - clusterSize * numberOfclusterToRead);
+    }
+    memcpy(clusterVal, buffer + (clusterSize*i), clusterSize);
+
+    if(FAT[clusterToRead] == 0xFFFFFFFF)
+      break;
+    if(FAT[clusterToRead] == 0xFFFFFFFE)
+      return READ_ERROR;
+    clusterToRead = FAT[clusterToRead];
+  }
+
+  // update current pointer
+  opened_files[handle].curr_pointer += size;
+
   return FUNC_NOT_WORKING;
 }
 
