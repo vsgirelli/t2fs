@@ -19,6 +19,7 @@
 #define NO_SUCH_FILE -7
 #define NO_FREE_HANDLES -8
 #define NO_FREE_INDEXES -9
+#define WRITE_ERROR -10
 
 #define MAX_OPEN_FILES 10
 

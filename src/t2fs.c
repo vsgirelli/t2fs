@@ -88,7 +88,6 @@ FILE2 create2 (char *filename) {
   Record frecord;
   frecord.TypeVal = TYPEVAL_REGULAR; 
   strcpy(frecord.name, name);
-  printf("FILENAME: %s\nsizeof: %d\n frecord.name: %s\n", name, strlen(name), frecord.name);
   // when a new file is created, one sector must be allocated. Thus, the inital
   // file size, in bytes, is the cluster size, even if the file is empty.
   frecord.bytesFileSize = clusterSize; 
@@ -99,18 +98,19 @@ FILE2 create2 (char *filename) {
   // Allocates the Record on the dir and writes it to the disk
   dir[i] = frecord;
 
-  //char *dirName;
-  //strncpy(dirName, filename, strlen(filename) - strlen(name));
-  //printf("DIRNAME: %s\n strlen: %d\n", dirName, strlen(filename) - strlen(name));
-  //int clusterNumber = getFileRecord(filename);
-  //writeCluster((char *)dir, clusterNumber);
+  // gambiarras to write the cluster in the disk
+  // i get the path only until the occurence of the file the user wants to create
+  char *dirName = malloc(sizeof(char) * (strlen(filename) - strlen(name)));
+  strncpy(dirName, filename, (strlen(filename) - strlen(name)));
+  // and get the Record of the dir where i want to write the file
+  Record *dirRecord = getFileRecord(dirName);
+  // then i write the dir in its cluster
+  writeCluster((BYTE *)dir, dirRecord->firstCluster);
   ls(dir);
 
   // open the file and allocates it in the opened_files array
   file = open2(filename);
-  /*
-   *  na FAT, altero a entrada da FAT, e devo criar um registro no dir.
-   */
+
   if (!file) {
     return CREATE_FILE_ERROR;
   }
@@ -180,6 +180,7 @@ FILE2 open2 (char *filename) {
 
     opened_files[FILE_HANDLE] = openedFile;
     opened_files_map[FILE_HANDLE] = 1;
+    printf("File created successfully\n");
 
     return FILE_HANDLE;
 }

@@ -13,7 +13,8 @@ Record* getLastDir(char *path);
 char *getFileName(char *path);
 void ls(Record *dir);
 DWORD getNextFreeFATIndex(void);
-void writeCluster(char *buffer, int clusterNumber);
+int writeCluster(BYTE *buffer, int clusterNumber);
+Record *getFileRecord(char *path);
 
 /*
  *  Function that initializes the root dir
@@ -23,7 +24,7 @@ int initRoot() {
   // need for cast.
   // All directories occupy ONE cluster
   root = malloc(clusterSize);
-  unsigned char rootBuffer[SECTOR_SIZE];
+  BYTE rootBuffer[SECTOR_SIZE];
   // reading root's cluster (all of it's sectors, given by SectorsPerCluster)
   int i;
   for (i = 0; i < superblock.SectorsPerCluster; i++) {
@@ -102,7 +103,7 @@ int initFat() {
     */
     FAT = malloc(SECTOR_SIZE * fatSizeInSectors);
 
-    unsigned char readBuffer[SECTOR_SIZE];
+    BYTE readBuffer[SECTOR_SIZE];
     int i;
     for (i = 0; i < fatSizeInSectors; i++) {
 
@@ -152,7 +153,7 @@ DWORD getNextFreeFATIndex() {
  *  Function that reads the Superblock from the disk.
  */
 int readSuperblock() {
-  unsigned char buffer[SECTOR_SIZE];
+  BYTE buffer[SECTOR_SIZE];
 
   if (read_sector(0, buffer) != 0) {
     return READ_ERROR;
@@ -320,13 +321,13 @@ int getNextHandleNum(){
  */
 char * readCluster(int clusterNumber){
     char* cluster = malloc(clusterSize);
-    unsigned char readBuffer[SECTOR_SIZE];
+    BYTE readBuffer[SECTOR_SIZE];
 
     int i;
     for (i = 0; i < superblock.SectorsPerCluster; i++) {
-
         int adds = superblock.DataSectorStart + (clusterNumber * superblock.SectorsPerCluster);
         if (read_sector((adds + i), readBuffer) != 0) {
+          printf("Error reading cluster %d\n", (adds + i));
           return NULL;
         }
         memcpy((cluster + (SECTOR_SIZE * i)), readBuffer, SECTOR_SIZE);
@@ -338,40 +339,99 @@ char * readCluster(int clusterNumber){
 /*
  *  Writes a cluster on the disk.
  */
-void writeCluster(char *buffer, int clusterNumber) {
-  // open the parent Directory
-  //Record *parent = (Record *) readCluster(buffer[1].firstCluster);
-//  char *dirName = getDirName(path);
+int writeCluster(BYTE *buffer, int clusterNumber) {
+  int i;
+  BYTE writeBuffer[SECTOR_SIZE];
+  memset(writeBuffer, '\0', SECTOR_SIZE);
 
-}
-/*
-char *getFileRecord(char *path) {
-  char *occurr = path;
-  int count = 0;
-  // counts the number of occurrences of '/'
-  while (occurr != NULL) {
-    occurr = strchr(occurr, '/');
-    if(occurr) {
-      count++;
-      occurr++;
+  for(i = 0; i < superblock.SectorsPerCluster; i++) {
+    int adds = superblock.DataSectorStart + (clusterNumber * superblock.SectorsPerCluster);
+    memcpy(writeBuffer, (buffer + (SECTOR_SIZE * i)), SECTOR_SIZE);
+    if (write_sector((adds + i), writeBuffer) != 0) {
+      return WRITE_ERROR;
     }
   }
-  occurr = strtok(path, "/");
-  for (int i = 0; i < (count - 1); i++) {
-    occurr = strtok(NULL, "/");
+
+  return FUNC_WORKING;
+}
+
+/*
+ *  Function that returns the Record from a given file (dir, regular or link)
+ */
+Record *getFileRecord(char *path) {
+  int isAbsolute = (*path == '/');
+
+  Record *dir;
+  Record *currentRecord = NULL;
+
+  char *token = malloc(strlen(path) * sizeof(char));
+  int tokenSize = sizeof(token);
+  memset(token, '\0', tokenSize);
+  strcpy(token, path);
+  token = strtok(token, "/");
+
+  if (isAbsolute) { // If the given path is ABSOLUTE, starts from the root dir
+    dir = root;
+  }
+  else { // If it is a RELATIVE path, starts from the cwd
+    dir = cwd;
   }
 
+  int i = 0, found = 0;
+  // A NULL pointer is returned at the end of the string
+  while(token != NULL) {
+    // given the dir selected above (based on the path),
+    // now we have to search for the dir record which name equals the token
+    while(strncmp(dir[i].name, token, strlen(token)) != 0 && i < recordsPerDir) {
+      i++;
+    }
+    found = 1;
 
-  return NULL;
+    // if found something without reaching the end of the dir
+    if(i<recordsPerDir) {
+      // updates the currentRecord
+      currentRecord = &dir[i];
+
+      // check if the Record is a directory
+      if(dir[i].TypeVal != TYPEVAL_DIRETORIO) {
+        // if it is not, it means that we can't open it, so we can already return
+        return currentRecord;
+      }
+      else{ // if it is a dir
+        token = strtok(NULL, "/");
+        if (token != NULL) { // and there is more in the path
+          // then reads the cluster and continues
+          dir = (Record *) readCluster(dir[i].firstCluster);
+        }
+        else { // else, if that was the whole path, just returns the Record
+          return currentRecord;
+        }
+      }
+    }
+    else {
+      return NULL; // dir not found inside the current dir
+    }
+  }
+
+  free(token);
+  // if the first strtok results in NULL, it means that the desired dir
+  // is the root dir, or the path was empty
+  if (found == 0 && isAbsolute) {
+    printf("Can not get the given Record\n");
+    return dir;
+  }
+  else {
+    return NULL;
+  }
 }
-*/
+
 /*
  * Given a dir Record, this function reads its entries
  * and returns them in a DIRENT format.
  */
 DIRENT2* getDirEnt(Record* dir)
 {
-    /*unsigned char buffer[SECTOR_SIZE];
+    /*BYTE buffer[SECTOR_SIZE];
     Record * dir_ent = malloc(clusterSize);
 
     int i;
@@ -424,7 +484,7 @@ void ls(Record *dir) {
  *  Function that reads the sectors of a Directory
  */
 int readDir(Record *dir) {
-  unsigned char buffer[SECTOR_SIZE];
+  BYTE buffer[SECTOR_SIZE];
   ls(dir);
   int i;
   for (i = 0; i < superblock.SectorsPerCluster; i++) {

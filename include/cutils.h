@@ -75,6 +75,7 @@ DIRENT2 * getDirEnt(Record* dir);
 int getNextHandleNum();
 char * readCluster(int cluster);
 DWORD getNextFreeFATIndex();
-void writeCluster(char *buffer, int clusterNumber);
+int writeCluster(BYTE *buffer, int clusterNumber);
+Record *getFileRecord(char *path);
 #endif
 
