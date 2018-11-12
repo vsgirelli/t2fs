@@ -512,7 +512,7 @@ void teste(int tstNumber) {
 
 int main()
 {
-    char cmd[] = "/dir/create.txt";
+    char cmd[] = "/create1.txt";
     struct t2fs_record *token;
     //int i,n;
     //int flagAchou, flagEncerrar;
@@ -522,15 +522,15 @@ int main()
     identify2(name, 255);
     //printf("***\n\nGRUPO: %s\n\n***\n\n", name);
 
-    //token = create2(cmd);
-    //printf("token: %d\n", token);
-    //printf("cmd: %s\n", cmd);
+    token = create2(cmd);
+    printf("token: %d\n", token);
+    printf("cmd: %s\n", cmd);
 
-    fhandle = open2("/link1");
+    //fhandle = open2("/link1");
 
-    printf("%d\n", fhandle);
-    freeIndex = getNextFreeFATIndex();
-    printf("%d", freeIndex);
+    //printf("%d\n", fhandle);
+    //freeIndex = getNextFreeFATIndex();
+    //printf("%d", freeIndex);
 
     /*
     printf ("Testing for T2FS - v 2018.1.2\n");
