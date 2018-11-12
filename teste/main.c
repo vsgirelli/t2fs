@@ -514,14 +514,59 @@ int main()
 {
     char cmd[] = "/create1.txt";
     struct t2fs_record *token;
+
+    char cmd[256];
+    char *token;
+    int i,n;
+    int flagAchou, flagEncerrar;
+
+    printf ("Testing for T2FS - v 2018.1.2\n");
+    //token = strtok("who"," \t");
+    strcpy(cmd, "man");
+    token = strtok(cmd," \t");
+    cmdMan();
+
+    flagEncerrar = 0;
+    while (1) {
+        printf ("T2FS> ");
+        gets(cmd);
+        if( (token = strtok(cmd," \t")) != NULL ) {
+			// Verifica se é comando de teste
+			n = atoi(token);
+			if (n) {
+				teste(n);
+				continue;
+			}
+			//
+			flagAchou = 0;
+			for (i=0; strcmp(cmdList[i].name,"fim")!=0; i++) {
+				if (strcmp(cmdList[i].name, token)==0) {
+					flagAchou = 1;
+					cmdList[i].f();
+					if (cmdList[i].helpId==CMD_EXIT) {
+						flagEncerrar = 1;
+						break;
+					}
+				}
+			}
+			if (!flagAchou) printf ("???\n");
+        }
+		if (flagEncerrar) break;
+    }
+
+    //char cmd[] = "/dir/create.txt";
+    //struct t2fs_record *token;
+>>>>>>> e15ea5424993b9ccd68dc9f1a5cbcf39eefa36dd
     //int i,n;
     //int flagAchou, flagEncerrar;
-    unsigned int fhandle;
-    unsigned int freeIndex;
-    char name[256];
-    identify2(name, 255);
+
+    //unsigned int fhandle;
+    //unsigned int freeIndex;
+    //char name[256];
+    //identify2(name, 255);
     //printf("***\n\nGRUPO: %s\n\n***\n\n", name);
 
+<<<<<<< HEAD
     token = create2(cmd);
     printf("token: %d\n", token);
     printf("cmd: %s\n", cmd);
@@ -531,14 +576,26 @@ int main()
     //printf("%d\n", fhandle);
     //freeIndex = getNextFreeFATIndex();
     //printf("%d", freeIndex);
+=======
+    //token = create2(cmd);
+    //printf("token: %d\n", token);
+    //printf("cmd: %s\n", cmd);
+    //DIRENT2 dir_content[64];
+    //fhandle = opendir2("/dir1");
+    //readdir2(fhandle, dir_content);
+    //closedir2(fhandle);
+    //printf("%d\n", fhandle);
+    //freeIndex = getNextFreeFATIndex();
+    //printf("%d", freeIndex);
 
-    /*
-    printf ("Testing for T2FS - v 2018.1.2\n");
+>>>>>>> e15ea5424993b9ccd68dc9f1a5cbcf39eefa36dd
+
+    //printf ("Testing for T2FS - v 2018.1.2\n");
     //token = strtok("who"," \t");
-    strcpy(cmd, "man");
-    token = strtok(cmd," \t");
-    cmdMan();
-
+    //strcpy(cmd, "man");
+    //token = strtok(cmd," \t");
+    //cmdMan();
+/*
     flagEncerrar = 0;
     while (1) {
         printf ("T2FS> ");
