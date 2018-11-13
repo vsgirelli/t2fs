@@ -512,12 +512,13 @@ void teste(int tstNumber) {
 
 int main()
 {
-    char cmd[] = "/create1.txt";
+    char cmd[] = "/dir1/teste.txt";
     char *token;
     int i,n;
     int flagAchou, flagEncerrar;
 
-    int handler = create2(cmd);
+    //int ret = create2(cmd);
+    int handler = delete2(cmd);
     printf("FILE HANDLER: %d\n", handler);
 
     /*printf ("Testing for T2FS - v 2018.1.2\n");
