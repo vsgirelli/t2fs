@@ -409,18 +409,19 @@ Record *getFileRecord(char *path) {
       }
     }
     else {
+      printf("No such file\n");
       return NULL; // dir not found inside the current dir
     }
   }
 
   free(token);
   // if the first strtok results in NULL, it means that the desired dir
-  // is the root dir, or the path was empty
+  // is the root dir
   if (found == 0 && isAbsolute) {
-    printf("Can not get the given Record\n");
     return dir;
   }
-  else {
+  else { // or the path was empty
+    printf("Can not get the given Record\n");
     return NULL;
   }
 }

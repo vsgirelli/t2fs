@@ -105,8 +105,13 @@ FILE2 create2 (char *filename) {
   // and get the Record of the dir where i want to write the file
   Record *dirRecord = getFileRecord(dirName);
   // then i write the dir in its cluster
-  writeCluster((BYTE *)dir, dirRecord->firstCluster);
-  ls(dir);
+  if (strtok(dirName, "/") == NULL) {
+    writeCluster((BYTE *)dir, root->firstCluster);
+  }
+  else {
+    writeCluster((BYTE *)dir, dirRecord->firstCluster);
+  }
+  //ls(dir);
 
   // open the file and allocates it in the opened_files array
   file = open2(filename);
@@ -130,8 +135,63 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int delete2 (char *filename) {
   initT2fs();
 
+  // get the file name to delete
+  char *name = getFileName(filename);
+  // get the parent cluster
+  char *dirName = malloc(sizeof(char) * (strlen(filename) - strlen(name)));
+  strncpy(dirName, filename, (strlen(filename) - strlen(name)));
+  // and get the Record of the dir where to search for the file to delete 
+  Record *parent = getFileRecord(dirName);
+  printf("len filename: %d\nlen dir: %d\n", strlen(filename), strlen(dirName));
+  printf("filename %s\ndirName: %s\n\n", name, dirName);
+  ls(parent);
 
-  return FUNC_NOT_WORKING;
+  int i = 0;
+  // search for the file in the dir
+  while (strncmp(parent[i].name, name, strlen(name)) != 0 && i < recordsPerDir) {
+    i++;
+  }
+
+  // if found the file inside its parent
+  if (i < recordsPerDir) {
+    // search for and free all the file's clusters
+    DWORD cluster = parent[i].firstCluster;
+    DWORD nextCluster = 0;
+
+    while (FAT[cluster] != FAT_EOF) {
+      // saves the pointer to the next file cluster
+      nextCluster = FAT[cluster];
+      // free the current cluster
+      FAT[cluster] = FAT_FREE_CLUSTER;
+      cluster = nextCluster;
+    }
+    FAT[cluster] = FAT_FREE_CLUSTER;
+
+    // transform the file Record into a invalid one
+    parent[i].TypeVal = TYPEVAL_INVALIDO;
+    int nameSize = sizeof(parent[i].name);
+    memset(parent[i].name, '\0', nameSize);
+    parent[i].bytesFileSize = 0;
+    parent[i].clustersFileSize = 0;
+    parent[i].firstCluster = 0;
+
+    // then i write the dir in its cluster
+    if (strtok(dirName, "/") == NULL) {
+      writeCluster((BYTE *)parent, root->firstCluster);
+    }
+    else {
+      writeCluster((BYTE *)parent, parent[i].firstCluster);
+    }
+
+    ls(parent);
+  }
+  else {
+    printf("File does not exist.\n");
+    return NO_SUCH_FILE;
+  }
+  
+  printf("File deleted successfully\n");
+  return FUNC_WORKING;
 }
 
 

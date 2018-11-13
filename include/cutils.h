@@ -27,9 +27,7 @@ typedef struct open_file {
   long int curr_pointer;    // current position pointer, in bytes
 } oFile;
 
-
 // **** GLOBAL VARIABLES
-// TODO verificar qual o tipo exatamente do nosso working dir
 // Current working directory
 Record *cwd;
 // Record for the root dir

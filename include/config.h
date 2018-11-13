@@ -1,14 +1,11 @@
 /*
- *  Arquivo para conter códigos de erro,
- *  valores de prioridade,
- *  estados das threads
+ *  File with error codes, FAT special values and others
  */
 
 #ifndef __cconfig__
 #define __cconfig__
 
-// CÓDIGOS DE ERRO
-// aparentemente, ele quer valores negativos pra erro
+// ERROR CODES 
 #define FUNC_WORKING 0
 #define FUNC_NOT_IMPLEMENTED -1
 #define FUNC_NOT_WORKING -2
@@ -23,6 +20,7 @@
 
 #define MAX_OPEN_FILES 10
 
+// FAT especial values
 #define FAT_FREE_CLUSTER 0x00000000
 #define FAT_BAD_CLUSTER 0xFFFFFFFE
 #define FAT_EOF 0xFFFFFFFF
