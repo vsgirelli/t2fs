@@ -212,6 +212,7 @@ FILE2 open2 (char *filename) {
     openedFile.curr_pointer =  0;
     openedFile.frecord = openedRecord;
 
+    //printf("fileName: %s\n", openedRecord->name);
     FILE_HANDLE = getNextHandleNum();
 
     opened_files[FILE_HANDLE] = openedFile;
@@ -259,6 +260,8 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o número 
 -----------------------------------------------------------------------------*/
 int read2 (FILE2 handle, char *buffer, int size) {
   initT2fs();
+//Record *record = getLastDir("dir1/file");
+//ls(record);
 
   //printf("%d", opened_files_map[handle]);
 
@@ -280,30 +283,35 @@ int read2 (FILE2 handle, char *buffer, int size) {
   // int division -> return flow
   // don't need to round up, beacause we are reading the first one out side the for
   int numberOfclusterToRead = size / clusterSize;
-  printf("\n numero de cluster para ler: %d", numberOfclusterToRead);
+  //printf("\n numero de cluster para ler: %d", numberOfclusterToRead);
 
   // get the first cluster according to the curr_pointer, skipping when size is greater than cluster size
   int numberOfClusterToSkip = opened_files[handle].curr_pointer / clusterSize;
   int j;
-  for(j=0;j<numberOfClusterToSkip;j++){
+  for(j = 0; j < numberOfClusterToSkip; j++){
     clusterToRead = FAT[clusterToRead];
     if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
       return READ_ERROR;
   }
-  printf("\n numero de cluster para ler: %d", numberOfClusterToSkip);
+ // printf("\n numero de cluster para ler: %d", numberOfClusterToSkip);
 
   // read the first cluster out of the for
   char *clusterVal = readCluster(clusterToRead);
   // indicates how many bytes inside the cluster must be skiped due to the curr_pointer
   int bytesToSkip = (opened_files[handle].curr_pointer - (numberOfClusterToSkip * clusterSize)) - 1;
+  if (bytesToSkip < 0 )
+    bytesToSkip = 0;
+
   // count how many bytes are left on the current cluster
   int bytesLeftInCluster = (clusterSize - bytesToSkip + 1);
+  if (bytesLeftInCluster > clusterSize)
+    bytesLeftInCluster = clusterSize;
 
   if (size < bytesLeftInCluster) {
-    memcpy((clusterVal + bytesToSkip), buffer, size);
+    memcpy(buffer, (clusterVal + bytesToSkip), size);
     return FUNC_WORKING;
   }
-  memcpy((clusterVal + bytesToSkip), buffer, bytesLeftInCluster);
+  memcpy(buffer, (clusterVal + bytesToSkip), bytesLeftInCluster);
 
   // from the size bytes, already read the bytes above
   int bytesLeftToRead = size - bytesLeftInCluster;
@@ -317,10 +325,10 @@ int read2 (FILE2 handle, char *buffer, int size) {
     clusterVal = readCluster(clusterToRead);
     // if it is the last cluster, copy just the necessary size
     if(numberOfclusterToRead - numberOfClusterToSkip == i){
-      memcpy(clusterVal, buffer + (clusterSize*i), bytesLeftToRead);
+      memcpy(buffer + (clusterSize*i), clusterVal, bytesLeftToRead);
     }
     else {
-      memcpy(clusterVal, buffer + (clusterSize*i), clusterSize);
+      memcpy(buffer + (clusterSize*i), clusterVal, clusterSize);
       bytesLeftToRead -= clusterSize;
     }
 
@@ -334,7 +342,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
   // update current pointer
   opened_files[handle].curr_pointer += size;
 
-  return FUNC_NOT_WORKING;
+  return FUNC_WORKING;
 }
 
 
