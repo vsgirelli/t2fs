@@ -416,6 +416,22 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 
     dirContent =  (Record *) readCluster(dirRecord.frecord->firstCluster);
 
+    long int i = dirRecord.curr_pointer;
+
+    if ( isValidDirEntry(dirContent[i].TypeVal) == VALID_TYPE ){
+
+        strncpy(dentry->name, dirContent[i].name, strlen(dirContent[i].name));
+        dentry->name[strlen(dirContent[i].name)] = '\0';
+        dentry->fileType = dirContent[i].TypeVal;
+        dentry->fileSize = dirContent[i].bytesFileSize;
+        opened_files[handle].curr_pointer += 1;
+
+        return FUNC_WORKING;
+    }
+
+    return FUNC_NOT_WORKING;
+
+
  //   long int curPtr = dirRecord.frecord.curr_pointer;
  //   strncpy(dentry[j].name, dirContent[j].name, strlen(dirContent[j].name));
  //   dentry[j].fileType = dirContent[j].TypeVal;
@@ -423,7 +439,6 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 
 //    dirRecord.frecord.curr_pointer +=1;
 
-    return FUNC_WORKING;
 }
 
 

@@ -513,6 +513,10 @@ void teste(int tstNumber) {
 int main()
 {
 
+    int d;
+    int j;
+    d = open2("./file2.txt");
+    j = open2("./file1.txt");
     char cmd[256];
     char *token;
     int i,n;

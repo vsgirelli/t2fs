@@ -275,6 +275,16 @@ Record* getLastDir(char *path) {
   }
 }
 
+
+/*
+ * Function that formats the string to a full format
+ * Had to do it because some strings are passed without the \0 Null terminator
+ */
+void formatString(char * string, char* new_string )
+{
+
+}
+
 /*
  * Function that determines if a file specified by pathname
  * exists, opens it and returns its pointer.
@@ -394,8 +404,10 @@ char *getFileName(char *path) {
 
     char *last = strrchr(pathCopy, '/');
 
+    int c = strlen(path);
     if (last != NULL && (last + 1) != '\0')
     {
+
         return (last + 1);
     } else {
 
@@ -436,4 +448,15 @@ int readDir(Record *dir) {
   return FUNC_WORKING;
 }
 
+
+int isValidDirEntry(BYTE typeVal){
+
+    if (typeVal == TYPEVAL_DIRETORIO || typeVal == TYPEVAL_REGULAR || typeVal == TYPEVAL_LINK)
+    {
+        return VALID_TYPE;
+    }
+
+    return NOT_VALID_TYPE;
+
+}
 

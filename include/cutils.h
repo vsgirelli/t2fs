@@ -24,7 +24,7 @@ typedef struct t2fs_superbloco Superblock;
  */
 typedef struct open_file {
   Record *frecord;     // file record
-  long int curr_pointer;    // current position pointer, in bytes
+  long int curr_pointer;    // current position pointer, in bytes or number of dirEntry
 } oFile;
 
 
@@ -74,5 +74,7 @@ Record* openFile(char *pathname);
 DIRENT2 * getDirEnt(Record* dir);
 int getNextHandleNum();
 char * readCluster(int cluster);
+int isValidDirEntry(BYTE typeVal);
 unsigned int getNextFreeFATIndex();
+void formatString(char *string, char *new_string);
 #endif
