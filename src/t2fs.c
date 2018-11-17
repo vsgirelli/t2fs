@@ -58,29 +58,63 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 -----------------------------------------------------------------------------*/
 FILE2 create2 (char *filename) {
   initT2fs();
-
-  Record *dir;
-  dir = getLastDir(filename);
-  //ls(dir);
+  Record *dir = getLastDir(filename);
 
   // filehandler
   FILE2 file = 0;
 
   char *name = getFileName(filename);
-  printf("FILENAME: %s\n", name);
-  /*
-   *  Após achar o path, e verificar que no cwd não há um registro de arquivo
-   *  com mesmo nome do arquivo que se deseja criar, então cria-se o arquivo.
-   *  Para criar o arquivo é necessário encontrar um cluster que esteja livre.
-   *  Isso pode ser feito acessando a FAT e verificando algum cluster livre.
-   *  Como é enderecamento encadeado, posso pegar qualquer um, pode ser o
-   *  primeiro. Assim, requisito a apidisk a leitura do cluster x que está livre
-   *  na FAT, altero a entrada da FAT, e devo criar um registro no cwd.
-   *  Lembrar do current_pointer setado em 0.
-   */
+
+  // check if the file already exists
+  int i;
+  for (i = 0; i < recordsPerDir; i++) {
+    if (strncmp(name, dir[i].name, sizeof(name)) == 0) {
+      printf("File already exists\n");
+      return CREATE_FILE_ERROR;
+    }
+  }
+
+  // finds a invalid Record on the dir where the file can be allocated
+  i = 0;
+  while (dir[i].TypeVal != TYPEVAL_INVALIDO) {
+    i++;
+  }
+  if (i > recordsPerDir) {
+    printf("Directory already full\n");
+    return CREATE_FILE_ERROR;
+  }
+  
+  // creating a Record for the file
+  Record frecord;
+  frecord.TypeVal = TYPEVAL_REGULAR; 
+  strcpy(frecord.name, name);
+  // when a new file is created, one sector must be allocated. Thus, the inital
+  // file size, in bytes, is the cluster size, even if the file is empty.
+  frecord.bytesFileSize = clusterSize; 
+  frecord.clustersFileSize = 1;
+  frecord.firstCluster = getNextFreeFATIndex();
+  FAT[frecord.firstCluster] = FAT_EOF;
+
+  // Allocates the Record on the dir and writes it to the disk
+  dir[i] = frecord;
+
+  // gambiarras to write the cluster in the disk
+  // i get the path only until the occurence of the file the user wants to create
+  char *dirName = malloc(sizeof(char) * (strlen(filename) - strlen(name)));
+  strncpy(dirName, filename, (strlen(filename) - strlen(name)));
+  // and get the Record of the dir where i want to write the file
+  Record *dirRecord = getFileRecord(dirName);
+  // then i write the dir in its cluster
+  writeCluster((BYTE *)dir, dirRecord->firstCluster);
+  ls(dir);
+
+  // open the file and allocates it in the opened_files array
+  file = open2(filename);
+
   if (!file) {
     return CREATE_FILE_ERROR;
   }
+
   return file;
 }
 
@@ -132,7 +166,7 @@ FILE2 open2 (char *filename) {
     }
 
     numberOfOpenedFiles += 1;
-    int FILE_HANDLE;
+    FILE2 FILE_HANDLE;
     /*
         Allocate a struct of oFile type to represent this opened file
     */
@@ -146,6 +180,8 @@ FILE2 open2 (char *filename) {
 
     opened_files[FILE_HANDLE] = openedFile;
     opened_files_map[FILE_HANDLE] = 1;
+    printf("File created successfully\n");
+
     return FILE_HANDLE;
 }
 
@@ -370,7 +406,7 @@ DIR2 opendir2 (char *pathname) {
     }
 
     numberOfOpenedFiles += 1;
-    int DIR_HANDLE;
+    DIR2 DIR_HANDLE;
     /*
         Allocate a struct of oFile type to represent this opened file
     */

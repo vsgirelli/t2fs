@@ -52,15 +52,15 @@ int recordsPerSector;
 short int numberOfOpenedFiles;
 
 // 32 bits pointers addressing clusters on the disk
-unsigned int *FAT;
+DWORD *FAT;
 // number of fat pointers per sector
-unsigned int pointersPerSector;
+DWORD pointersPerSector;
 // fat size in sectors
-unsigned int fatSizeInSectors;
+DWORD fatSizeInSectors;
 // index for creating files
-unsigned int currentFreeFATIndex;
+DWORD currentFreeFATIndex;
 // last index for the FAT
-unsigned int lastFATIndex;
+DWORD lastFATIndex;
 
 // **** Functions's prototypes
 // TODO funão de inicializaão que lê o Superbloco e incializa as variáveis
@@ -75,6 +75,9 @@ DIRENT2 * getDirEnt(Record* dir);
 int getNextHandleNum();
 char * readCluster(int cluster);
 int isValidDirEntry(BYTE typeVal);
-unsigned int getNextFreeFATIndex();
 void formatString(char *string, char *new_string);
+DWORD getNextFreeFATIndex();
+int writeCluster(BYTE *buffer, int clusterNumber);
+Record *getFileRecord(char *path);
 #endif
+

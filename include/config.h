@@ -21,7 +21,12 @@
 #define NO_FREE_HANDLES -8
 #define NO_FREE_INDEXES -9
 #define NOT_VALID_TYPE -10
+#define WRITE_ERROR -10
 
 #define MAX_OPEN_FILES 10
+
+#define FAT_FREE_CLUSTER 0x00000000
+#define FAT_BAD_CLUSTER 0xFFFFFFFE
+#define FAT_EOF 0xFFFFFFFF
 
 #endif
