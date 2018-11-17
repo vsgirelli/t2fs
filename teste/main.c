@@ -518,8 +518,13 @@ int main()
     int flagAchou, flagEncerrar;
 
     //int ret = create2(cmd);
-    int handler = delete2(cmd);
-    printf("FILE HANDLER: %d\n", handler);
+    //int handler = delete2(cmd);
+    //printf("FILE HANDLER: %d\n", handler);
+
+    char buffer[89];
+    int handle = open2("dir1/file2.txt");
+    int err = read2(handle, buffer, 89);
+    printf("buffer: %s\n\n", buffer);
 
     /*printf ("Testing for T2FS - v 2018.1.2\n");
     //token = strtok("who"," \t");
