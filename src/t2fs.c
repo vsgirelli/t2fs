@@ -68,7 +68,7 @@ FILE2 create2 (char *filename) {
   // check if the file already exists
   int i;
   for (i = 0; i < recordsPerDir; i++) {
-    if (strncmp(name, dir[i].name, sizeof(name)) == 0) {
+    if (strncmp(name, dir[i].name, sizeof(dir[i].name)) == 0) {
       printf("File already exists\n");
       return CREATE_FILE_ERROR;
     }
@@ -83,14 +83,14 @@ FILE2 create2 (char *filename) {
     printf("Directory already full\n");
     return CREATE_FILE_ERROR;
   }
-  
+
   // creating a Record for the file
   Record frecord;
-  frecord.TypeVal = TYPEVAL_REGULAR; 
+  frecord.TypeVal = TYPEVAL_REGULAR;
   strcpy(frecord.name, name);
   // when a new file is created, one sector must be allocated. Thus, the inital
   // file size, in bytes, is the cluster size, even if the file is empty.
-  frecord.bytesFileSize = clusterSize; 
+  frecord.bytesFileSize = clusterSize;
   frecord.clustersFileSize = 1;
   frecord.firstCluster = getNextFreeFATIndex();
   FAT[frecord.firstCluster] = FAT_EOF;
@@ -98,28 +98,17 @@ FILE2 create2 (char *filename) {
   // Allocates the Record on the dir and writes it to the disk
   dir[i] = frecord;
 
-  // gambiarras to write the cluster in the disk
-  // i get the path only until the occurence of the file the user wants to create
-  char *dirName = malloc(sizeof(char) * (strlen(filename) - strlen(name)));
-  strncpy(dirName, filename, (strlen(filename) - strlen(name)));
-  // and get the Record of the dir where i want to write the file
-  Record *dirRecord = getFileRecord(dirName);
-  // then i write the dir in its cluster
-  if (strtok(dirName, "/") == NULL) {
-    writeCluster((BYTE *)dir, root->firstCluster);
-  }
-  else {
-    writeCluster((BYTE *)dir, dirRecord->firstCluster);
-  }
-  //ls(dir);
+  writeCluster((BYTE *)dir, dir[0].firstCluster);
 
   // open the file and allocates it in the opened_files array
   file = open2(filename);
 
-  if (!file) {
+  if (file == OPEN_ERROR) {
     return CREATE_FILE_ERROR;
   }
 
+  ls(dir);
+  printf("File created successfully\n");
   return file;
 }
 
@@ -137,14 +126,8 @@ int delete2 (char *filename) {
 
   // get the file name to delete
   char *name = getFileName(filename);
-  // get the parent cluster
-  char *dirName = malloc(sizeof(char) * (strlen(filename) - strlen(name)));
-  strncpy(dirName, filename, (strlen(filename) - strlen(name)));
-  // and get the Record of the dir where to search for the file to delete 
-  Record *parent = getFileRecord(dirName);
-  printf("len filename: %d\nlen dir: %d\n", strlen(filename), strlen(dirName));
-  printf("filename %s\ndirName: %s\n\n", name, dirName);
-  ls(parent);
+  Record *parent = getLastDir(filename);
+  //ls(parent);
 
   int i = 0;
   // search for the file in the dir
@@ -175,21 +158,14 @@ int delete2 (char *filename) {
     parent[i].clustersFileSize = 0;
     parent[i].firstCluster = 0;
 
-    // then i write the dir in its cluster
-    if (strtok(dirName, "/") == NULL) {
-      writeCluster((BYTE *)parent, root->firstCluster);
-    }
-    else {
-      writeCluster((BYTE *)parent, parent[i].firstCluster);
-    }
-
-    ls(parent);
+    writeCluster((BYTE *)parent, parent[0].firstCluster);
   }
   else {
     printf("File does not exist.\n");
     return NO_SUCH_FILE;
   }
-  
+
+    ls(parent);
   printf("File deleted successfully\n");
   return FUNC_WORKING;
 }
@@ -240,7 +216,6 @@ FILE2 open2 (char *filename) {
 
     opened_files[FILE_HANDLE] = openedFile;
     opened_files_map[FILE_HANDLE] = 1;
-    printf("File created successfully\n");
 
     return FILE_HANDLE;
 }
@@ -299,7 +274,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
   // get first cluster
   DWORD clusterToRead = rec->firstCluster;
 
-  if(FAT[clusterToRead] == 0xFFFFFFFE)
+  if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
     return READ_ERROR;
 
   // int division -> return flow
@@ -312,27 +287,46 @@ int read2 (FILE2 handle, char *buffer, int size) {
   int j;
   for(j=0;j<numberOfClusterToSkip;j++){
     clusterToRead = FAT[clusterToRead];
-    if(FAT[clusterToRead] == 0xFFFFFFFE)
+    if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
       return READ_ERROR;
   }
   printf("\n numero de cluster para ler: %d", numberOfClusterToSkip);
 
   // read the first cluster out of the for
   char *clusterVal = readCluster(clusterToRead);
-  memcpy(clusterVal + opened_files[handle].curr_pointer , buffer, size - clusterSize * numberOfclusterToRead);
+  // indicates how many bytes inside the cluster must be skiped due to the curr_pointer
+  int bytesToSkip = (opened_files[handle].curr_pointer - (numberOfClusterToSkip * clusterSize)) - 1;
+  // count how many bytes are left on the current cluster
+  int bytesLeftInCluster = (clusterSize - bytesToSkip + 1);
+
+  if (size < bytesLeftInCluster) {
+    memcpy((clusterVal + bytesToSkip), buffer, size);
+    return FUNC_WORKING;
+  }
+  memcpy((clusterVal + bytesToSkip), buffer, bytesLeftInCluster);
+
+  // from the size bytes, already read the bytes above
+  int bytesLeftToRead = size - bytesLeftInCluster;
 
   int i;
-  for (i=0;i<numberOfclusterToRead - numberOfClusterToSkip;i++){
+  clusterToRead = FAT[clusterToRead];
+  if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+    return READ_ERROR;
+
+  for (i = 1; i <= numberOfclusterToRead - numberOfClusterToSkip; i++){
     clusterVal = readCluster(clusterToRead);
     // if it is the last cluster, copy just the necessary size
-    if(numberOfclusterToRead - numberOfClusterToSkip == i-1){
-      memcpy(clusterVal, buffer + (clusterSize*i), size - clusterSize * numberOfclusterToRead);
+    if(numberOfclusterToRead - numberOfClusterToSkip == i){
+      memcpy(clusterVal, buffer + (clusterSize*i), bytesLeftToRead);
     }
-    memcpy(clusterVal, buffer + (clusterSize*i), clusterSize);
+    else {
+      memcpy(clusterVal, buffer + (clusterSize*i), clusterSize);
+      bytesLeftToRead -= clusterSize;
+    }
 
-    if(FAT[clusterToRead] == 0xFFFFFFFF)
+    if(FAT[clusterToRead] == FAT_EOF)
       break;
-    if(FAT[clusterToRead] == 0xFFFFFFFE)
+    if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
       return READ_ERROR;
     clusterToRead = FAT[clusterToRead];
   }

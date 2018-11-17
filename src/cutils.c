@@ -362,7 +362,7 @@ Record *getFileRecord(char *path) {
   int isAbsolute = (*path == '/');
 
   Record *dir;
-  Record *currentRecord = NULL;
+  Record *currentRecord = malloc(sizeof(Record));
 
   char *token = malloc(strlen(path) * sizeof(char));
   int tokenSize = sizeof(token);
@@ -372,9 +372,11 @@ Record *getFileRecord(char *path) {
 
   if (isAbsolute) { // If the given path is ABSOLUTE, starts from the root dir
     dir = root;
+    // prepares the currentRecord to be the . record on root
   }
   else { // If it is a RELATIVE path, starts from the cwd
     dir = cwd;
+    // prepares the currentRecord to be the . record on cwd
   }
 
   int i = 0, found = 0;
@@ -385,12 +387,12 @@ Record *getFileRecord(char *path) {
     while(strncmp(dir[i].name, token, strlen(token)) != 0 && i < recordsPerDir) {
       i++;
     }
-    found = 1;
-
     // if found something without reaching the end of the dir
     if(i<recordsPerDir) {
+      found = 1;
+
       // updates the currentRecord
-      currentRecord = &dir[i];
+      *currentRecord = dir[i];
 
       // check if the Record is a directory
       if(dir[i].TypeVal != TYPEVAL_DIRETORIO) {
@@ -409,7 +411,7 @@ Record *getFileRecord(char *path) {
       }
     }
     else {
-      printf("No such file\n");
+      printf("No such file or directory\n");
       return NULL; // dir not found inside the current dir
     }
   }
@@ -418,7 +420,7 @@ Record *getFileRecord(char *path) {
   // if the first strtok results in NULL, it means that the desired dir
   // is the root dir
   if (found == 0 && isAbsolute) {
-    return dir;
+    return currentRecord;
   }
   else { // or the path was empty
     printf("Can not get the given Record\n");
@@ -454,17 +456,20 @@ DIRENT2* getDirEnt(Record* dir)
  * (removing the path)
  */
 char *getFileName(char *path) {
-    char* pathCopy = strdup(path);
+  // duplicates the received path and stores it into name
+  // (with the null terminator)
+  char *name = strdup(path);
+  char *token = strtok(name, "/");
 
-    char *last = strrchr(pathCopy, '/');
-    if (last != NULL && (last + 1) != '\0')
-    {
-        return (last + 1);
-    } else {
-        return NULL;
+  while (token != NULL) {
+    name = strdup(token);
+    token = strtok(NULL, "/");
+    if (token == NULL) {
+      return name;
     }
+  }
 
-    return NULL;
+  return token;
 }
 
 /*
