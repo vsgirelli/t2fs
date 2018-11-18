@@ -282,14 +282,22 @@ Record* openFile(char *pathname) {
     char* file_name = getFileName(pathname);
 
     if (file_name == NULL){
+        printf("Invalid file name\n");
         return NULL;
     }
 
+    // User required to open the root dir
+    if (strncmp(file_name, "/", strlen(file_name)) == 0)
+    {
+        return root;
+    }
+
+    // It's a file inside the fileDir var
     short int  i;
     for (i=0; i < recordsPerDir; i ++)
     {
         // Found the file, now we must check if it's a link
-        if (strncmp(file_name, fileDir[i].name, sizeof(file_name)) == 0)
+        if (strncmp(file_name, fileDir[i].name, strlen(file_name)) == 0)
         {
             // It's a bloody link, we read the link's content
             // and open the respective file
@@ -462,16 +470,22 @@ char *getFileName(char *path) {
     char* pathCopy = strdup(path);
 
     char *last = strrchr(pathCopy, '/');
-    if (last != NULL && (last + 1) != '\0')
+    // Checks if there's a file name and it's not asking for the root dir "/"
+    if (last != NULL && (last + 1) != '\0' && strncmp(path, "/", strlen(path)) != 0)
     {
 
         return (last + 1);
     }
-    else if (strncmp(path, ".", strlen(path)) == 0 || strncmp(path, ".", strlen(path)) == 0)
+    // Checks if it is not any special dir ".", ".."
+    else if (strncmp(path, ".", strlen(path)) == 0 || strncmp(path, "..", strlen(path)) == 0)
     {
         return path;
     }
-
+    //Checks if it's the root dir
+    else if (strncmp(path, "/", strlen(path)) == 0)
+    {
+        return path;
+    }
     else {
         return NULL;
     }

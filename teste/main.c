@@ -512,7 +512,8 @@ void teste(int tstNumber) {
 
 int main()
 {
-    //chdir2("/dir1");
+    chdir2("/dir1");
+    chdir2("/");
     char cmd[256];
     char *token;
     int i,n;

@@ -369,7 +369,9 @@ int chdir2 (char *pathname) {
         return CH_ERROR;
     }
 
-    cwd = dir;
+
+    cwd =  (Record *) readCluster(dir->firstCluster);
+
     // TODO primeiras funcs a serem feitas
     return FUNC_WORKING;
 }
