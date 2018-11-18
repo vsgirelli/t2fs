@@ -23,6 +23,7 @@
 #define NOT_VALID_TYPE -10
 #define WRITE_ERROR -10
 #define CH_ERROR -11
+#define INVALID_LINK_TYPE -12
 
 #define MAX_OPEN_FILES 10
 
