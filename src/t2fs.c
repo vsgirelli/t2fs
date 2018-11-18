@@ -83,14 +83,14 @@ FILE2 create2 (char *filename) {
     printf("Directory already full\n");
     return CREATE_FILE_ERROR;
   }
-  
+
   // creating a Record for the file
   Record frecord;
-  frecord.TypeVal = TYPEVAL_REGULAR; 
+  frecord.TypeVal = TYPEVAL_REGULAR;
   strcpy(frecord.name, name);
   // when a new file is created, one sector must be allocated. Thus, the inital
   // file size, in bytes, is the cluster size, even if the file is empty.
-  frecord.bytesFileSize = clusterSize; 
+  frecord.bytesFileSize = clusterSize;
   frecord.clustersFileSize = 1;
   frecord.firstCluster = getNextFreeFATIndex();
   FAT[frecord.firstCluster] = FAT_EOF;
@@ -164,6 +164,13 @@ FILE2 open2 (char *filename) {
     {
         return OPEN_ERROR;
     }
+
+    if ( openedRecord->TypeVal != TYPEVAL_REGULAR)
+    {
+        printf("File is not regular\n");
+        return OPEN_ERROR;
+    }
+
 
     numberOfOpenedFiles += 1;
     FILE2 FILE_HANDLE;
@@ -346,10 +353,25 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 		Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
-  initT2fs();
+    initT2fs();
 
-  // TODO primeiras funcs a serem feitas
-  return FUNC_NOT_WORKING;
+    Record* dir;
+
+    if ( (dir = openFile(pathname)) == NULL)
+    {
+        printf("Invalid Dir\n");
+        return CH_ERROR;
+    }
+
+    if ( dir->TypeVal != TYPEVAL_DIRETORIO)
+    {
+        printf("File is not a directory\n");
+        return CH_ERROR;
+    }
+
+    cwd = dir;
+    // TODO primeiras funcs a serem feitas
+    return FUNC_WORKING;
 }
 
 
@@ -402,6 +424,13 @@ DIR2 opendir2 (char *pathname) {
 
     if ( (openedRecord = openFile(pathname)) == NULL)
     {
+        printf("Invalid Dir\n");
+        return OPEN_ERROR;
+    }
+
+    if ( openedRecord->TypeVal != TYPEVAL_DIRETORIO)
+    {
+        printf("File is not a directory\n");
         return OPEN_ERROR;
     }
 

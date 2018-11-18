@@ -266,15 +266,6 @@ Record* getLastDir(char *path) {
 
 
 /*
- * Function that formats the string to a full format
- * Had to do it because some strings are passed without the \0 Null terminator
- */
-void formatString(char * string, char* new_string )
-{
-
-}
-
-/*
  * Function that determines if a file specified by pathname
  * exists, opens it and returns its pointer.
 */
@@ -289,8 +280,13 @@ Record* openFile(char *pathname) {
 
     // Goes through the file's dir to search for the file
     char* file_name = getFileName(pathname);
+
+    if (file_name == NULL){
+        return NULL;
+    }
+
     short int  i;
-    for (i=2; i < recordsPerDir; i ++)
+    for (i=0; i < recordsPerDir; i ++)
     {
         // Found the file, now we must check if it's a link
         if (strncmp(file_name, fileDir[i].name, sizeof(file_name)) == 0)
@@ -470,7 +466,13 @@ char *getFileName(char *path) {
     {
 
         return (last + 1);
-    } else {
+    }
+    else if (strncmp(path, ".", strlen(path)) == 0 || strncmp(path, ".", strlen(path)) == 0)
+    {
+        return path;
+    }
+
+    else {
         return NULL;
     }
 
