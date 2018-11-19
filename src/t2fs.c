@@ -68,7 +68,7 @@ FILE2 create2 (char *filename) {
   // check if the file already exists
   int i;
   for (i = 0; i < recordsPerDir; i++) {
-    if (strncmp(name, dir[i].name, strlen(dir[i].name)) == 0) {
+    if (strncmp(name, dir[i].name, strlen(name)) == 0) {
       printf("File already exists\n");
       return CREATE_FILE_ERROR;
     }
@@ -612,15 +612,20 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 
     long int i = dirRecord.curr_pointer;
 
-    if ( isValidDirEntry(dirContent[i].TypeVal) == VALID_TYPE ){
+    while ( i < recordsPerDir ){
 
-        strncpy(dentry->name, dirContent[i].name, strlen(dirContent[i].name));
-        dentry->name[strlen(dirContent[i].name)] = '\0';
-        dentry->fileType = dirContent[i].TypeVal;
-        dentry->fileSize = dirContent[i].bytesFileSize;
-        opened_files[handle].curr_pointer += 1;
+        if ( isValidDirEntry(dirContent[i].TypeVal) == VALID_TYPE) {
 
-        return FUNC_WORKING;
+            strncpy(dentry->name, dirContent[i].name, strlen(dirContent[i].name));
+            dentry->name[strlen(dirContent[i].name)] = '\0';
+            dentry->fileType = dirContent[i].TypeVal;
+            dentry->fileSize = dirContent[i].bytesFileSize;
+            opened_files[handle].curr_pointer = i + 1;
+            return FUNC_WORKING;
+        }
+
+        i++;
+
     }
 
     return FUNC_NOT_WORKING;
