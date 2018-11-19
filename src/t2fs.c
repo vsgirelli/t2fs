@@ -196,8 +196,6 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 FILE2 open2 (char *filename) {
     initT2fs();
 
-    //ls(root);
-    //ls(&root[11]);
     if (numberOfOpenedFiles == 10){
     // Maximum number of files opened
         printf("Maximum number of opened files reached");
@@ -470,6 +468,7 @@ int mkdir2 (char *pathname) {
   // creating a Record for the new directory
   Record drecord;
   drecord.TypeVal = TYPEVAL_DIRETORIO;
+  memset(drecord.name, '\0', 51);
   strcpy(drecord.name, name);
   // when a new dir is created, one sector must be allocated.
   drecord.bytesFileSize = clusterSize;
@@ -491,9 +490,9 @@ int mkdir2 (char *pathname) {
   // Creating the . and .. entries on the new dir
   Record this;
   this.TypeVal = TYPEVAL_DIRETORIO;
+  memset(this.name, '\0', 51);
   char thisChar[] = ".\0";
   strcpy(this.name, thisChar);
-  printf("this: %s", this.name);
   this.bytesFileSize = clusterSize;
   this.clustersFileSize = 1;
   // points to it's own firstCluster
@@ -501,9 +500,9 @@ int mkdir2 (char *pathname) {
 
   Record parent;
   parent.TypeVal = TYPEVAL_DIRETORIO;
+  memset(parent.name, '\0', 51);
   char parentChar[] = "..\0";
   strcpy(parent.name, parentChar);
-  printf("parent: %s", parent.name);
   parent.bytesFileSize = clusterSize;
   parent.clustersFileSize = 1;
   // points to the parent's firstCluster
@@ -529,8 +528,6 @@ int mkdir2 (char *pathname) {
     return WRITE_ERROR;
   }
 
-  //ls(dir);
-  //ls(newDir);
   printf("Directory created successfully\n");
 
   return FUNC_WORKING;
