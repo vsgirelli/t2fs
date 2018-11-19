@@ -281,19 +281,21 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o número 
 -----------------------------------------------------------------------------*/
 int read2 (FILE2 handle, char *buffer, int size) {
   initT2fs();
-//Record *record = getLastDir("dir1/file");
-//ls(record);
-
-  //printf("%d", opened_files_map[handle]);
 
   // check if it is opened
   if(opened_files_map[handle] == 0)
     return READ_ERROR;
 
   Record *rec = opened_files[handle].frecord;
+
+  int totalBytes = 0;
   // trying to read a size greater than the record
-  if(size + opened_files[handle].curr_pointer > rec->bytesFileSize)
-    return READ_ERROR;
+  // curr_pointer goes to final
+  if(size + opened_files[handle].curr_pointer > rec->bytesFileSize){
+    size = rec->bytesFileSize - opened_files[handle].curr_pointer - 1;
+    int sizeGreater = 1;
+  }
+
 
   // get first cluster
   DWORD clusterToRead = rec->firstCluster;
@@ -329,9 +331,11 @@ int read2 (FILE2 handle, char *buffer, int size) {
     bytesLeftInCluster = clusterSize;
 
   if (size < bytesLeftInCluster) {
+    totalBytes += size;
     memcpy(buffer, (clusterVal + bytesToSkip), size);
-    return FUNC_WORKING;
+    return totalBytes;
   }
+  totalBytes += size;
   memcpy(buffer, (clusterVal + bytesToSkip), bytesLeftInCluster);
 
   // from the size bytes, already read the bytes above
@@ -346,9 +350,11 @@ int read2 (FILE2 handle, char *buffer, int size) {
     clusterVal = readCluster(clusterToRead);
     // if it is the last cluster, copy just the necessary size
     if(numberOfclusterToRead - numberOfClusterToSkip == i){
+      totalBytes += bytesLeftToRead;
       memcpy(buffer + (clusterSize*i), clusterVal, bytesLeftToRead);
     }
     else {
+      totalBytes += clusterSize;
       memcpy(buffer + (clusterSize*i), clusterVal, clusterSize);
       bytesLeftToRead -= clusterSize;
     }
@@ -363,7 +369,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
   // update current pointer
   opened_files[handle].curr_pointer += size;
 
-  return FUNC_WORKING;
+  return totalBytes;
 }
 
 
@@ -424,19 +430,19 @@ int seek2 (FILE2 handle, DWORD offset) {
   initT2fs();
 
   if(opened_files_map[handle] == 0){
-    printf("Error File not open!");
+    //printf("Error File not open!");
     return SEEK_ERROR;
   }
 
   Record *rec = opened_files[handle].frecord;
 
   if((int)offset > (int)rec->bytesFileSize || (int)offset < -1){
-    printf("To big or to small! offset:%d\nsize:%d",offset,rec->bytesFileSize);
+    //printf("To big or to small! offset:%d\nsize:%d",offset,rec->bytesFileSize);
     return SEEK_ERROR;
   }
 
   if(offset == -1){
-    opened_files[handle].curr_pointer += rec->bytesFileSize;
+    opened_files[handle].curr_pointer = rec->bytesFileSize;
   }
   else{
     opened_files[handle].curr_pointer = offset;
