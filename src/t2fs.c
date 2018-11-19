@@ -491,6 +491,11 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
     initT2fs();
+    if (strcmp(pathname, "/") == 0) {
+      cwd = root;
+      strcpy(currentPath, "/");
+      return FUNC_WORKING;
+    }
 
     Record* dir;
 
@@ -513,9 +518,21 @@ int chdir2 (char *pathname) {
     }
 
 
+    if (*pathname == '/') {
+      strncpy(currentPath, pathname, MAX_FILE_NAME_SIZE+1);
+      fixPath(currentPath);
+    }
+    else {
+      char path[MAX_FILE_NAME_SIZE * 2 + 2] = {0};
+      strncpy(path, currentPath, MAX_FILE_NAME_SIZE + 1);
+      strcat(path, pathname);
+
+      fixPath(path);
+      strncpy(currentPath, path, MAX_FILE_NAME_SIZE + 1);
+    }
+
     cwd =  (Record *) readCluster(dir->firstCluster);
 
-    // TODO primeiras funcs a serem feitas
     return FUNC_WORKING;
 }
 
@@ -538,8 +555,13 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int getcwd2 (char *pathname, int size) {
   initT2fs();
 
-  // TODO primeiras funcs a serem feitas
-  return FUNC_NOT_WORKING;
+  if (size > MAX_FILE_NAME_SIZE) {
+    return INSUFICIENT_SIZE;
+  }
+
+  strncpy(pathname, currentPath, size);
+
+  return FUNC_WORKING;
 }
 
 

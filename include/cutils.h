@@ -31,6 +31,8 @@ typedef struct open_file {
 // **** GLOBAL VARIABLES
 // Current working directory
 Record *cwd;
+// Current path name:
+char currentPath[MAX_FILE_NAME_SIZE + 1];
 // Record for the root dir
 Record *root;
 // Superblock
@@ -76,6 +78,7 @@ DWORD getNextFreeFATIndex();
 int writeCluster(BYTE *buffer, int clusterNumber);
 FILE2 createFile(char *filename, int typeval);
 int writeFAT(void);
+void fixPath(char *path);
 
 #endif
 

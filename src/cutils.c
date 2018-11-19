@@ -13,6 +13,7 @@ int writeCluster(BYTE *buffer, int clusterNumber);
 char * readCluster(int clusterNumber);
 
 void ls(Record *dir);
+void fixPath(char *path);
 
 int isValidDirEntry(BYTE typeVal);
 int getNextHandleNum(void);
@@ -95,6 +96,7 @@ int initT2fs() {
     return READ_ERROR;
   }
   cwd = root;
+  strcpy(currentPath, "/\0");
   initFat();
 
   initializedT2fs = 1;
@@ -531,7 +533,36 @@ char *getFileName(char *path) {
     }
   }
 
+  // must free after a strdup
+  free(name);
   return token;
+}
+
+void fixPath(char *path) {
+  char originalPath[MAX_OPEN_FILES + 1];
+  strcpy(originalPath, path);
+
+  *path = '\0';
+  char *token, *c;
+
+  token = strtok(originalPath, "/");
+
+  while(token != NULL) {
+    if (strcmp(token, "..") == 0) {
+      c = strrchr(path, '/');
+      if (c != NULL) {
+        *c = '\0';
+      }
+    }
+    else if (strcmp(token, "") != 0 && strcmp(token, ".") != 0) {
+      strcat(path, "/");
+      strcat(path, token);
+    }
+
+    token = strtok(NULL, "/");
+  }
+
+  strcat(path, "/");
 }
 
 /*
