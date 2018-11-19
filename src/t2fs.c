@@ -68,7 +68,7 @@ FILE2 create2 (char *filename) {
   // check if the file already exists
   int i;
   for (i = 0; i < recordsPerDir; i++) {
-    if (strncmp(name, dir[i].name, strlen(dir[i].name)) == 0) {
+    if (strncmp(name, dir[i].name, strlen(name)) == 0) {
       printf("File already exists\n");
       return CREATE_FILE_ERROR;
     }
@@ -97,8 +97,17 @@ FILE2 create2 (char *filename) {
 
   // Allocates the Record on the dir and writes it to the disk
   dir[i] = frecord;
+  ls(dir);
+  for (i = 0; i < 30; i++) {
+      printf("FAT[%d]: %d\n", i, FAT[i]);
+  }
 
-  writeCluster((BYTE *)dir, dir[0].firstCluster);
+  if (writeFAT() != FUNC_WORKING) {
+    return WRITE_ERROR;
+  }
+  if (writeCluster((BYTE *)dir, dir[0].firstCluster) != FUNC_WORKING) {
+    return WRITE_ERROR;
+  }
 
   // open the file and allocates it in the opened_files array
   file = open2(filename);
@@ -107,7 +116,6 @@ FILE2 create2 (char *filename) {
     return CREATE_FILE_ERROR;
   }
 
-  ls(dir);
   printf("File created successfully\n");
   return file;
 }
@@ -127,7 +135,6 @@ int delete2 (char *filename) {
   // get the file name to delete
   char *name = getFileName(filename);
   Record *parent = getLastDir(filename);
-  //ls(parent);
 
   int i = 0;
   // search for the file in the dir
@@ -152,20 +159,25 @@ int delete2 (char *filename) {
 
     // transform the file Record into a invalid one
     parent[i].TypeVal = TYPEVAL_INVALIDO;
-    int nameSize = sizeof(parent[i].name);
-    memset(parent[i].name, '\0', nameSize);
+    //int nameSize = sizeof(parent[i].name);
+    memset(parent[i].name, '\0', 51);
     parent[i].bytesFileSize = 0;
     parent[i].clustersFileSize = 0;
     parent[i].firstCluster = 0;
 
-    writeCluster((BYTE *)parent, parent[0].firstCluster);
+    if (writeFAT() != FUNC_WORKING) {
+      return WRITE_ERROR;
+    }
+    if (writeCluster((BYTE *)parent, parent[0].firstCluster) != FUNC_WORKING) {
+      return WRITE_ERROR;
+    }
   }
   else {
     printf("File does not exist.\n");
     return NO_SUCH_FILE;
   }
 
-    ls(parent);
+  ls(parent);
   printf("File deleted successfully\n");
   return FUNC_WORKING;
 }
@@ -187,6 +199,10 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
     initT2fs();
+    int i;
+  for (i = 0; i < 30; i++) {
+      printf("FAT[%d]: %d\n", i, FAT[i]);
+  }
 
     if (numberOfOpenedFiles == 10){
     // Maximum number of files opened

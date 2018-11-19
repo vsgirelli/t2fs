@@ -6,20 +6,26 @@
 
 int initT2fs(void);
 int initRoot(void);
-int initFat(void);
 int readSuperblock(void);
+
 int readDir(Record *dir);
-Record* getLastDir(char *path);
-char *getFileName(char *path);
-void ls(Record *dir);
-DWORD getNextFreeFATIndex(void);
 int writeCluster(BYTE *buffer, int clusterNumber);
-Record *getFileRecord(char *path);
+char * readCluster(int clusterNumber);
+
+void ls(Record *dir);
+
 int isValidDirEntry(BYTE typeVal);
+int getNextHandleNum(void);
+
+Record *getFileRecord(char *path);
 FILE2 createFile(char * filename, int typeval);
 Record* openFile(char *pathname);
-int getNextHandleNum(void);
-char * readCluster(int clusterNumber);
+Record* getLastDir(char *path);
+char *getFileName(char *path);
+
+int initFat(void);
+int writeFAT(void);
+DWORD getNextFreeFATIndex(void);
 
 /*
  *  Function that initializes the root dir
@@ -571,4 +577,42 @@ int isValidDirEntry(BYTE typeVal){
     return NOT_VALID_TYPE;
 
 }
+
+/*
+ * Function that writes the FAT into the disk,
+ * in cases the FAT needs to be updated.
+ */
+int writeFAT() {
+  // fatSizeInSectors
+  BYTE writeBuffer[SECTOR_SIZE];
+  int i;
+  for (i = 0; i < fatSizeInSectors; i++) {
+    int adds = superblock.pFATSectorStart;
+
+    memcpy(writeBuffer, (FAT + (pointersPerSector * i)), SECTOR_SIZE);
+    //printf("writeBuffer: %s\n", writeBuffer);
+    if (write_sector((adds + i), writeBuffer) != 0) {
+      return WRITE_ERROR;
+    }
+  }
+
+  return FUNC_WORKING;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
