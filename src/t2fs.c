@@ -227,7 +227,6 @@ FILE2 open2 (char *filename) {
     openedFile.curr_pointer =  0;
     openedFile.frecord = openedRecord;
 
-    //printf("fileName: %s\n", openedRecord->name);
     FILE_HANDLE = getNextHandleNum();
 
     opened_files[FILE_HANDLE] = openedFile;
@@ -279,10 +278,6 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o número 
 -----------------------------------------------------------------------------*/
 int read2 (FILE2 handle, char *buffer, int size) {
   initT2fs();
-//Record *record = getLastDir("dir1/file");
-//ls(record);
-
-  //printf("%d", opened_files_map[handle]);
 
   // check if it is opened
   if(opened_files_map[handle] == 0)
@@ -302,7 +297,6 @@ int read2 (FILE2 handle, char *buffer, int size) {
   // int division -> return flow
   // don't need to round up, beacause we are reading the first one out side the for
   int numberOfclusterToRead = size / clusterSize;
-  //printf("\n numero de cluster para ler: %d", numberOfclusterToRead);
 
   // get the first cluster according to the curr_pointer, skipping when size is greater than cluster size
   int numberOfClusterToSkip = opened_files[handle].curr_pointer / clusterSize;
@@ -312,7 +306,6 @@ int read2 (FILE2 handle, char *buffer, int size) {
     if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
       return READ_ERROR;
   }
- // printf("\n numero de cluster para ler: %d", numberOfClusterToSkip);
 
   // read the first cluster out of the for
   char *clusterVal = readCluster(clusterToRead);
@@ -565,20 +558,44 @@ int rmdir2 (char *pathname) {
 
   // if found the dir inside its parent
   if (i < recordsPerDir) {
+    // opens the dir to check if it is empty
+    Record *dir = (Record *) readCluster(parent[i].firstCluster);
+    ls(dir);
+    int j;
+    for (j = 2; j < recordsPerDir; j++) {
+      if (dir[j].TypeVal != TYPEVAL_INVALIDO) {
+        printf("Directory not empty\n");
+        return DIR_NOT_EMPTY;
+      }
+    }
+
+    // sets a nullRecord to update the now invalid records
+    Record nullRecord;
+    nullRecord.TypeVal = TYPEVAL_INVALIDO;
+    memset(nullRecord.name, '\0', 51);
+    nullRecord.bytesFileSize = 0;
+    nullRecord.clustersFileSize = 0;
+    nullRecord.firstCluster = 0;
+
+    // sets the two Records inside the dir to invalid ones (just ot be sure hehe)
+    dir[0] = nullRecord;
+    dir[1] = nullRecord;
+
+    // updates the dir's cluster with null Records
+    if (writeCluster((BYTE *)dir, parent[i].firstCluster) != FUNC_WORKING) {
+      return WRITE_ERROR;
+    }
+
     // free the dir's cluster
     FAT[parent[i].firstCluster] = FAT_FREE_CLUSTER;
-
-    // transform the file Record into a invalid one
-    parent[i].TypeVal = TYPEVAL_INVALIDO;
-    //int nameSize = sizeof(parent[i].name);
-    memset(parent[i].name, '\0', 51);
-    parent[i].bytesFileSize = 0;
-    parent[i].clustersFileSize = 0;
-    parent[i].firstCluster = 0;
-
+    // transform the dir Record into a invalid one inside the parent
+    parent[i] = nullRecord;
+    
+    // updates the FAT
     if (writeFAT() != FUNC_WORKING) {
       return WRITE_ERROR;
     }
+    // updates the parent without the dir's Record
     if (writeCluster((BYTE *)parent, parent[0].firstCluster) != FUNC_WORKING) {
       return WRITE_ERROR;
     }
@@ -588,12 +605,8 @@ int rmdir2 (char *pathname) {
     return NO_SUCH_FILE;
   }
 
-  ls(parent);
   printf("Directory deleted successfully\n");
   return FUNC_WORKING;
-
-
-  return FUNC_NOT_WORKING;
 }
 
 
