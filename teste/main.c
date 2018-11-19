@@ -513,8 +513,8 @@ void teste(int tstNumber) {
 int main()
 {
 
-    mkdir2("/valdir6/");
-    open2("file2.txt");
+//    mkdir2("/valdir6/");
+//    open2("file2.txt");
 
     //fhandle = open2("/link1");
 
@@ -530,15 +530,20 @@ int main()
     //closedir2(fhandle);
     //printf("%d\n", fhandle);
     //freeIndex = getNextFreeFATIndex();
-    //printf("%d", freeIndex);
+    //printf("%d", freeIndex)
+    chdir2("link4");
+    char cmd[256];
+    char *token;
+    int i,n;
+    int flagAchou, flagEncerrar;
 
-
-    //printf ("Testing for T2FS - v 2018.1.2\n");
+    printf ("Testing for T2FS - v 2018.1.2\n");
     //token = strtok("who"," \t");
-    //strcpy(cmd, "man");
-    //token = strtok(cmd," \t");
-    //cmdMan();
-/*
+    strcpy(cmd, "man");
+    token = strtok(cmd," \t");
+    cmdMan();
+
+
     flagEncerrar = 0;
     while (1) {
         printf ("T2FS> ");
@@ -565,7 +570,7 @@ int main()
 			if (!flagAchou) printf ("???\n");
         }
 		if (flagEncerrar) break;
-    }*/
+    }
     return 0;
 }
 void cmdExit(void) {

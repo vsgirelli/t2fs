@@ -144,6 +144,13 @@ int delete2 (char *filename) {
     DWORD cluster = parent[i].firstCluster;
     DWORD nextCluster = 0;
 
+    if (FAT[cluster] == FAT_BAD_CLUSTER)
+    {
+        printf("File has badblock X(\n");
+        return OPEN_ERROR;
+    }
+
+
     while (FAT[cluster] != FAT_EOF) {
       // saves the pointer to the next file cluster
       nextCluster = FAT[cluster];
@@ -196,8 +203,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 FILE2 open2 (char *filename) {
     initT2fs();
 
-    ls(root);
-    ls(&root[11]);
+
     if (numberOfOpenedFiles == 10){
     // Maximum number of files opened
         printf("Maximum number of opened files reached");
@@ -812,7 +818,6 @@ int ln2(char *linkname, char *filename) {
     initT2fs();
 
     Record * orig_file;
-    Record * link_file;
 
     if ( (orig_file = openFile(filename)) == NULL)
     {
@@ -839,18 +844,15 @@ int ln2(char *linkname, char *filename) {
         return INVALID_LINK_TYPE;
     }
 
-    FILE2 link_handle = createFile(linkname, TYPEVAL_LINK);
+    unsigned int recordCluster = createFile(linkname, TYPEVAL_LINK);
 
-    if (link_handle == CREATE_FILE_ERROR)
+    if (recordCluster == CREATE_FILE_ERROR)
     {
         printf("Couldn't create the link\n");
         return CREATE_FILE_ERROR;
     }
 
-    close2(link_handle);
-
-    link_file = openFile(linkname);
-    writeCluster( (BYTE *)filename, link_file->firstCluster);
+    writeCluster( (BYTE *)filename, recordCluster);
 
     return FUNC_WORKING;
 }
