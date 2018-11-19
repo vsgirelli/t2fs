@@ -197,7 +197,7 @@ FILE2 open2 (char *filename) {
     initT2fs();
 
     ls(root);
-    ls(&root[8]);
+    ls(&root[11]);
     if (numberOfOpenedFiles == 10){
     // Maximum number of files opened
         printf("Maximum number of opened files reached");
@@ -477,8 +477,8 @@ int mkdir2 (char *pathname) {
   drecord.firstCluster = getNextFreeFATIndex();
   FAT[drecord.firstCluster] = FAT_EOF;
 
-  // Allocates the Record on the dir and writes it to the disk
-  // (only the information about the new dir's record)
+  // Allocates the Record on the dir and writes the parent record to the disk
+  // (only with the information about the new dir's RECORD)
   dir[i] = drecord;
   if (writeFAT() != FUNC_WORKING) {
     return WRITE_ERROR;
@@ -493,6 +493,7 @@ int mkdir2 (char *pathname) {
   this.TypeVal = TYPEVAL_DIRETORIO;
   char thisChar[] = ".\0";
   strcpy(this.name, thisChar);
+  printf("this: %s", this.name);
   this.bytesFileSize = clusterSize;
   this.clustersFileSize = 1;
   // points to it's own firstCluster
@@ -502,6 +503,7 @@ int mkdir2 (char *pathname) {
   parent.TypeVal = TYPEVAL_DIRETORIO;
   char parentChar[] = "..\0";
   strcpy(parent.name, parentChar);
+  printf("parent: %s", parent.name);
   parent.bytesFileSize = clusterSize;
   parent.clustersFileSize = 1;
   // points to the parent's firstCluster
@@ -553,7 +555,9 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 -----------------------------------------------------------------------------*/
 int rmdir2 (char *pathname) {
   initT2fs();
-  // TODO primeiras funcs a serem feitas
+
+
+
   return FUNC_NOT_WORKING;
 }
 

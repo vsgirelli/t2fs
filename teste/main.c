@@ -513,7 +513,7 @@ void teste(int tstNumber) {
 int main()
 {
 
-    mkdir2("/valdir3/");
+    mkdir2("/valdir6/");
     open2("file2.txt");
 
     //fhandle = open2("/link1");
