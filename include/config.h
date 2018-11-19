@@ -21,6 +21,7 @@
 #define WRITE_ERROR -10
 #define CH_ERROR -11
 #define INVALID_LINK_TYPE -12
+#define DIR_NOT_EMPTY -13
 
 #define MAX_OPEN_FILES 10
 
