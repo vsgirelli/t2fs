@@ -264,7 +264,72 @@ Record* getLastDir(char *path) {
   }
 }
 
+FILE2 createFile(char * filename, int typeval)
+{
+    if (typeval < TYPEVAL_DIRETORIO || typeval > TYPEVAL_LINK)
+    {
+        printf("Invalid typeval\n");
+        return TYPEVAL_INVALIDO;
+    }
 
+    Record *dir = getLastDir(filename);
+
+    // filehandler
+    FILE2 file = 0;
+
+    char *name = getFileName(filename);
+
+    // check if the file already exists
+    int i;
+    for (i = 0; i < recordsPerDir; i++) {
+        if (strncmp(name, dir[i].name, strlen(name)) == 0) {
+          printf("File already exists\n");
+          return CREATE_FILE_ERROR;
+        }
+    }
+
+    // finds a invalid Record on the dir where the file can be allocated
+    i = 0;
+    while (dir[i].TypeVal != TYPEVAL_INVALIDO) {
+        i++;
+    }
+    if (i > recordsPerDir) {
+        printf("Directory already full\n");
+        return CREATE_FILE_ERROR;
+    }
+
+    // creating a Record for the file
+    Record frecord;
+    frecord.TypeVal = typeval;
+    strcpy(frecord.name, name);
+    // when a new file is created, one sector must be allocated. Thus, the inital
+    // file size, in bytes, is the cluster size, even if the file is empty.
+    frecord.bytesFileSize = clusterSize;
+    frecord.clustersFileSize = 1;
+    frecord.firstCluster = getNextFreeFATIndex();
+    FAT[frecord.firstCluster] = FAT_EOF;
+
+    // Allocates the Record on the dir and writes it to the disk
+    dir[i] = frecord;
+
+    // gambiarras to write the cluster in the disk
+    // i get the path only until the occurence of the file the user wants to create
+    char *dirName = malloc(sizeof(char) * (strlen(filename) - strlen(name)));
+    strncpy(dirName, filename, (strlen(filename) - strlen(name)));
+    // and get the Record of the dir where i want to write the file
+    Record *dirRecord = getFileRecord(dirName);
+    // then i write the dir in its cluster
+    writeCluster((BYTE *)dir, dirRecord->firstCluster);
+
+    // open the file and allocates it in the opened_files array
+    file = open2(filename);
+
+    if (!file) {
+        return CREATE_FILE_ERROR;
+    }
+
+    return file;
+}
 /*
  * Function that determines if a file specified by pathname
  * exists, opens it and returns its pointer.

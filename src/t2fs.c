@@ -68,7 +68,7 @@ FILE2 create2 (char *filename) {
   // check if the file already exists
   int i;
   for (i = 0; i < recordsPerDir; i++) {
-    if (strncmp(name, dir[i].name, sizeof(name)) == 0) {
+    if (strncmp(name, dir[i].name, strlen(name)) == 0) {
       printf("File already exists\n");
       return CREATE_FILE_ERROR;
     }
@@ -371,6 +371,12 @@ int chdir2 (char *pathname) {
         return CH_ERROR;
     }
 
+    if (dir->TypeVal == TYPEVAL_LINK)
+    {
+        char* linkContent = readCluster(dir->firstCluster);
+        return chdir2(linkContent);
+    }
+
 
     cwd =  (Record *) readCluster(dir->firstCluster);
 
@@ -567,13 +573,15 @@ int ln2(char *linkname, char *filename) {
         return INVALID_LINK_TYPE;
     }
 
-    FILE2 link_handle = create2(linkname);
+    FILE2 link_handle = createFile(linkname, TYPEVAL_LINK);
 
     if (link_handle == CREATE_FILE_ERROR)
     {
         printf("Couldn't create the link\n");
         return CREATE_FILE_ERROR;
     }
+
+
 
     close2(link_handle);
 

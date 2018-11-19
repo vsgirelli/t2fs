@@ -512,8 +512,7 @@ void teste(int tstNumber) {
 
 int main()
 {
-    chdir2("/dir1");
-    chdir2("/");
+    chdir2("/oi");
     // chdir2("./dir1/../dir1"); Isso nao dá certo, mas é por causa da funcao getLastDir
     char cmd[256];
     char *token;
