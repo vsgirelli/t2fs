@@ -21,8 +21,9 @@
 #define WRITE_ERROR -10
 #define CH_ERROR -11
 #define INVALID_LINK_TYPE -12
-#define SEEK_ERROR -13;
-#define TRUNCATE_ERROR -14;
+#define DIR_NOT_EMPTY -13
+#define SEEK_ERROR -14;
+#define TRUNCATE_ERROR -15;
 
 #define MAX_OPEN_FILES 10
 
