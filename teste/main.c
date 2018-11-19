@@ -512,87 +512,15 @@ void teste(int tstNumber) {
 
 int main()
 {
-    char cmd[] = "/dir1/teste.txt";
 
-    //teste(10);
-    //ln2("./pedronha", "./dir1");
-    char *token;
-    int i,n;
-    int flagAchou, flagEncerrar;
-
-    //int ret = create2(cmd);
-    //int handler = delete2(cmd);
-    //printf("FILE HANDLER: %d\n", handler);
-
-    //create2("/dir1/teste2.txt");
-    //delete2("/dir1/teste2.txt");
-
-
-    char buffer[89];
-    int handle = open2("dir1/file2.txt");
-    int err = read2(handle, buffer, 89);
-    printf("buffer: %s\n\n", buffer);
-
-    /*printf ("Testing for T2FS - v 2018.1.2\n");
-=======
-    printf ("Testing for T2FS - v 2018.1.2\n");
->>>>>>> a8bf4d2350d4724769c4002b76b92bd513c7c2cf
-    //token = strtok("who"," \t");
-    strcpy(cmd, "man");
-    token = strtok(cmd," \t");
-    cmdMan();
-
-    flagEncerrar = 0;
-    while (1) {
-        printf ("T2FS> ");
-        gets(cmd);
-        if( (token = strtok(cmd," \t")) != NULL ) {
-			// Verifica se é comando de teste
-			n = atoi(token);
-			if (n) {
-				teste(n);
-				continue;
-			}
-			//
-			flagAchou = 0;
-			for (i=0; strcmp(cmdList[i].name,"fim")!=0; i++) {
-				if (strcmp(cmdList[i].name, token)==0) {
-					flagAchou = 1;
-					cmdList[i].f();
-					if (cmdList[i].helpId==CMD_EXIT) {
-						flagEncerrar = 1;
-						break;
-					}
-				}
-			}
-			if (!flagAchou) printf ("???\n");
-        }
-		if (flagEncerrar) break;
-    }
-
-    //char cmd[] = "/dir/create.txt";
-    //struct t2fs_record *token;
->>>>>>> e15ea5424993b9ccd68dc9f1a5cbcf39eefa36dd
-    //int i,n;
-    //int flagAchou, flagEncerrar;
-
-    //unsigned int fhandle;
-    //unsigned int freeIndex;
-    //char name[256];
-    //identify2(name, 255);
-    //printf("***\n\nGRUPO: %s\n\n***\n\n", name);
-
-<<<<<<< HEAD
-    token = create2(cmd);
-    printf("token: %d\n", token);
-    printf("cmd: %s\n", cmd);
+    mkdir2("/valdir3/");
+    open2("file2.txt");
 
     //fhandle = open2("/link1");
 
     //printf("%d\n", fhandle);
     //freeIndex = getNextFreeFATIndex();
     //printf("%d", freeIndex);
-=======
     //token = create2(cmd);
     //printf("token: %d\n", token);
     //printf("cmd: %s\n", cmd);
@@ -604,7 +532,6 @@ int main()
     //freeIndex = getNextFreeFATIndex();
     //printf("%d", freeIndex);
 
->>>>>>> e15ea5424993b9ccd68dc9f1a5cbcf39eefa36dd
 
     //printf ("Testing for T2FS - v 2018.1.2\n");
     //token = strtok("who"," \t");

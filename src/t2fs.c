@@ -97,10 +97,6 @@ FILE2 create2 (char *filename) {
 
   // Allocates the Record on the dir and writes it to the disk
   dir[i] = frecord;
-  ls(dir);
-  for (i = 0; i < 30; i++) {
-      printf("FAT[%d]: %d\n", i, FAT[i]);
-  }
 
   if (writeFAT() != FUNC_WORKING) {
     return WRITE_ERROR;
@@ -199,11 +195,9 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 -----------------------------------------------------------------------------*/
 FILE2 open2 (char *filename) {
     initT2fs();
-    int i;
-  for (i = 0; i < 30; i++) {
-      printf("FAT[%d]: %d\n", i, FAT[i]);
-  }
 
+    ls(root);
+    ls(&root[8]);
     if (numberOfOpenedFiles == 10){
     // Maximum number of files opened
         printf("Maximum number of opened files reached");
@@ -449,7 +443,95 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int mkdir2 (char *pathname) {
   initT2fs();
 
-  return FUNC_NOT_WORKING;
+  // dir in which the user wants to create the new directory
+  Record *dir = getLastDir(pathname);
+
+  char *name = getFileName(pathname);
+
+  // check if the directory already exists in dir
+  int i;
+  for (i = 0; i < recordsPerDir; i++) {
+    if (strncmp(name, dir[i].name, strlen(name)) == 0) {
+      printf("Directory already exists\n");
+      return CREATE_FILE_ERROR;
+    }
+  }
+
+  // finds a invalid Record on the dir where the file can be allocated
+  i = 0;
+  while (dir[i].TypeVal != TYPEVAL_INVALIDO) {
+    i++;
+  }
+  if (i > recordsPerDir) {
+    printf("Directory already full\n");
+    return CREATE_FILE_ERROR;
+  }
+
+  // creating a Record for the new directory
+  Record drecord;
+  drecord.TypeVal = TYPEVAL_DIRETORIO;
+  strcpy(drecord.name, name);
+  // when a new dir is created, one sector must be allocated.
+  drecord.bytesFileSize = clusterSize;
+  drecord.clustersFileSize = 1;
+  drecord.firstCluster = getNextFreeFATIndex();
+  FAT[drecord.firstCluster] = FAT_EOF;
+
+  // Allocates the Record on the dir and writes it to the disk
+  // (only the information about the new dir's record)
+  dir[i] = drecord;
+  if (writeFAT() != FUNC_WORKING) {
+    return WRITE_ERROR;
+  }
+  if (writeCluster((BYTE *)dir, dir[0].firstCluster) != FUNC_WORKING) {
+    return WRITE_ERROR;
+  }
+
+  // Now we need to add the . and the .. directories inside the new dir
+  // Creating the . and .. entries on the new dir
+  Record this;
+  this.TypeVal = TYPEVAL_DIRETORIO;
+  char thisChar[] = ".\0";
+  strcpy(this.name, thisChar);
+  this.bytesFileSize = clusterSize;
+  this.clustersFileSize = 1;
+  // points to it's own firstCluster
+  this.firstCluster = drecord.firstCluster;
+
+  Record parent;
+  parent.TypeVal = TYPEVAL_DIRETORIO;
+  char parentChar[] = "..\0";
+  strcpy(parent.name, parentChar);
+  parent.bytesFileSize = clusterSize;
+  parent.clustersFileSize = 1;
+  // points to the parent's firstCluster
+  parent.firstCluster = dir[0].firstCluster;
+
+  Record *newDir = malloc(clusterSize); 
+  newDir[0] = this;
+  newDir[1] = parent;
+
+  // make sure the other entries are invalid and clean
+  Record nullRecord;
+  nullRecord.TypeVal = TYPEVAL_INVALIDO;
+  memset(nullRecord.name, '\0', 51);
+  nullRecord.bytesFileSize = 0;
+  nullRecord.clustersFileSize = 0;
+  nullRecord.firstCluster = 0;
+  // sets a null record for all the remain records inside the new dir
+  for (i = 2; i < recordsPerDir; i++) {
+    newDir[i] = nullRecord;
+  }
+
+  if (writeCluster((BYTE *)newDir, newDir[0].firstCluster) != FUNC_WORKING) {
+    return WRITE_ERROR;
+  }
+
+  //ls(dir);
+  //ls(newDir);
+  printf("Directory created successfully\n");
+
+  return FUNC_WORKING;
 }
 
 

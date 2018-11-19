@@ -8,9 +8,8 @@ int initT2fs(void);
 int initRoot(void);
 int readSuperblock(void);
 
-int readDir(Record *dir);
 int writeCluster(BYTE *buffer, int clusterNumber);
-char * readCluster(int clusterNumber);
+char *readCluster(int clusterNumber);
 
 void ls(Record *dir);
 void fixPath(char *path);
@@ -578,25 +577,6 @@ void ls(Record *dir) {
     i++;
   }
 }
-
-/*
- *  Function that reads the sectors of a Directory
- */
-int readDir(Record *dir) {
-  BYTE buffer[SECTOR_SIZE];
-  //ls(dir);
-  int i;
-  for (i = 0; i < superblock.SectorsPerCluster; i++) {
-    int adds = superblock.DataSectorStart + (dir->firstCluster * superblock.SectorsPerCluster);
-    if (read_sector((adds + i), buffer) != 0) {
-      return READ_ERROR;
-    }
-    memcpy((dir + (recordsPerSector * i)), buffer, SECTOR_SIZE);
-  }
-
-  return FUNC_WORKING;
-}
-
 
 int isValidDirEntry(BYTE typeVal){
 
