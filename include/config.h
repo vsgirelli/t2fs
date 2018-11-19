@@ -5,7 +5,7 @@
 #ifndef __cconfig__
 #define __cconfig__
 
-// ERROR CODES 
+// ERROR CODES
 #define FUNC_WORKING 0
 #define VALID_TYPE 0
 #define FUNC_NOT_IMPLEMENTED -1
@@ -22,6 +22,8 @@
 #define CH_ERROR -11
 #define INVALID_LINK_TYPE -12
 #define DIR_NOT_EMPTY -13
+#define SEEK_ERROR -14;
+#define TRUNCATE_ERROR -15;
 
 #define MAX_OPEN_FILES 10
 

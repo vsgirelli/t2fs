@@ -414,7 +414,25 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int seek2 (FILE2 handle, DWORD offset) {
   initT2fs();
 
-  return FUNC_NOT_WORKING;
+  if(opened_files_map[handle] == 0){
+    printf("Error File not open!");
+    return SEEK_ERROR;
+  }
+
+  Record *rec = opened_files[handle].frecord;
+
+  if((int)offset > (int)rec->bytesFileSize || (int)offset < -1){
+    printf("To big or to small! offset:%d\nsize:%d",offset,rec->bytesFileSize);
+    return SEEK_ERROR;
+  }
+
+  if(offset == -1){
+    opened_files[handle].curr_pointer += rec->bytesFileSize;
+  }
+  else{
+    opened_files[handle].curr_pointer = offset;
+  }
+  return FUNC_WORKING;
 }
 
 
@@ -501,7 +519,7 @@ int mkdir2 (char *pathname) {
   // points to the parent's firstCluster
   parent.firstCluster = dir[0].firstCluster;
 
-  Record *newDir = malloc(clusterSize); 
+  Record *newDir = malloc(clusterSize);
   newDir[0] = this;
   newDir[1] = parent;
 
