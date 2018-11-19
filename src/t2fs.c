@@ -68,7 +68,7 @@ FILE2 create2 (char *filename) {
   // check if the file already exists
   int i;
   for (i = 0; i < recordsPerDir; i++) {
-    if (strncmp(name, dir[i].name, sizeof(dir[i].name)) == 0) {
+    if (strncmp(name, dir[i].name, strlen(dir[i].name)) == 0) {
       printf("File already exists\n");
       return CREATE_FILE_ERROR;
     }
@@ -201,6 +201,13 @@ FILE2 open2 (char *filename) {
         return OPEN_ERROR;
     }
 
+    if ( openedRecord->TypeVal != TYPEVAL_REGULAR)
+    {
+        printf("File is not regular\n");
+        return OPEN_ERROR;
+    }
+
+
     numberOfOpenedFiles += 1;
     FILE2 FILE_HANDLE;
     /*
@@ -233,6 +240,10 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int close2 (FILE2 handle) {
     initT2fs();
 
+    if (handle > 0 && handle < MAX_OPEN_FILES)
+    {
+        return NO_SUCH_FILE;
+    }
     if (opened_files_map[handle] == 0)
     {
         return NO_SUCH_FILE;
@@ -463,10 +474,33 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 		Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int chdir2 (char *pathname) {
-  initT2fs();
+    initT2fs();
 
-  // TODO primeiras funcs a serem feitas
-  return FUNC_NOT_WORKING;
+    Record* dir;
+
+    if ( (dir = openFile(pathname)) == NULL)
+    {
+        printf("Invalid Dir\n");
+        return CH_ERROR;
+    }
+
+    if ( dir->TypeVal != TYPEVAL_DIRETORIO && dir->TypeVal != TYPEVAL_LINK)
+    {
+        printf("File is not a directory\n");
+        return CH_ERROR;
+    }
+
+    if (dir->TypeVal == TYPEVAL_LINK)
+    {
+        char* linkContent = readCluster(dir->firstCluster);
+        return chdir2(linkContent);
+    }
+
+
+    cwd =  (Record *) readCluster(dir->firstCluster);
+
+    // TODO primeiras funcs a serem feitas
+    return FUNC_WORKING;
 }
 
 
@@ -519,6 +553,13 @@ DIR2 opendir2 (char *pathname) {
 
     if ( (openedRecord = openFile(pathname)) == NULL)
     {
+        printf("Invalid Dir\n");
+        return OPEN_ERROR;
+    }
+
+    if ( openedRecord->TypeVal != TYPEVAL_DIRETORIO)
+    {
+        printf("File is not a directory\n");
         return OPEN_ERROR;
     }
 
@@ -569,14 +610,21 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 
     dirContent =  (Record *) readCluster(dirRecord.frecord->firstCluster);
 
- //   long int curPtr = dirRecord.frecord.curr_pointer;
- //   strncpy(dentry[j].name, dirContent[j].name, strlen(dirContent[j].name));
- //   dentry[j].fileType = dirContent[j].TypeVal;
- //   dentry[j].fileSize = dirContent[j].bytesFileSize;
+    long int i = dirRecord.curr_pointer;
 
-//    dirRecord.frecord.curr_pointer +=1;
+    if ( isValidDirEntry(dirContent[i].TypeVal) == VALID_TYPE ){
 
-    return FUNC_WORKING;
+        strncpy(dentry->name, dirContent[i].name, strlen(dirContent[i].name));
+        dentry->name[strlen(dirContent[i].name)] = '\0';
+        dentry->fileType = dirContent[i].TypeVal;
+        dentry->fileSize = dirContent[i].bytesFileSize;
+        opened_files[handle].curr_pointer += 1;
+
+        return FUNC_WORKING;
+    }
+
+    return FUNC_NOT_WORKING;
+
 }
 
 
@@ -614,8 +662,49 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 	Em caso de erro, será retornado um valor diferente de zero.
 -----------------------------------------------------------------------------*/
 int ln2(char *linkname, char *filename) {
-  initT2fs();
+    initT2fs();
 
-  return FUNC_NOT_WORKING;
+    Record * orig_file;
+    Record * link_file;
+
+    if ( (orig_file = openFile(filename)) == NULL)
+    {
+        printf("No such file\n");
+        return NO_SUCH_FILE;
+    }
+
+    if ( orig_file->TypeVal != TYPEVAL_REGULAR && orig_file->TypeVal != TYPEVAL_DIRETORIO)
+    {
+        printf("Invalid link type\n");
+        return INVALID_LINK_TYPE;
+
+    }
+
+    if ( strlen(filename) > clusterSize)
+    {
+        printf("Maximum filename reached\n");
+        return INVALID_LINK_TYPE;
+    }
+
+    if (strlen(linkname) > MAX_FILE_NAME_SIZE)
+    {
+        printf("Link name exceeds maximum size\n");
+        return INVALID_LINK_TYPE;
+    }
+
+    FILE2 link_handle = createFile(linkname, TYPEVAL_LINK);
+
+    if (link_handle == CREATE_FILE_ERROR)
+    {
+        printf("Couldn't create the link\n");
+        return CREATE_FILE_ERROR;
+    }
+
+    close2(link_handle);
+
+    link_file = openFile(linkname);
+    writeCluster( (BYTE *)filename, link_file->firstCluster);
+
+    return FUNC_WORKING;
 }
 

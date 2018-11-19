@@ -15,6 +15,11 @@ void ls(Record *dir);
 DWORD getNextFreeFATIndex(void);
 int writeCluster(BYTE *buffer, int clusterNumber);
 Record *getFileRecord(char *path);
+int isValidDirEntry(BYTE typeVal);
+FILE2 createFile(char * filename, int typeval);
+Record* openFile(char *pathname);
+int getNextHandleNum(void);
+char * readCluster(int clusterNumber);
 
 /*
  *  Function that initializes the root dir
@@ -264,6 +269,66 @@ Record* getLastDir(char *path) {
   }
 }
 
+FILE2 createFile(char * filename, int typeval)
+{
+    if (typeval < TYPEVAL_DIRETORIO || typeval > TYPEVAL_LINK)
+    {
+        printf("Invalid typeval\n");
+        return TYPEVAL_INVALIDO;
+    }
+
+    Record *dir = getLastDir(filename);
+
+    // filehandler
+    FILE2 file = 0;
+
+    char *name = getFileName(filename);
+
+    // check if the file already exists
+    int i;
+    for (i = 0; i < recordsPerDir; i++) {
+        if (strncmp(name, dir[i].name, strlen(name)) == 0) {
+          printf("File already exists\n");
+          return CREATE_FILE_ERROR;
+        }
+    }
+
+    // finds a invalid Record on the dir where the file can be allocated
+    i = 0;
+    while (dir[i].TypeVal != TYPEVAL_INVALIDO) {
+        i++;
+    }
+    if (i > recordsPerDir) {
+        printf("Directory already full\n");
+        return CREATE_FILE_ERROR;
+    }
+
+    // creating a Record for the file
+    Record frecord;
+    frecord.TypeVal = (BYTE)typeval;
+    strcpy(frecord.name, name);
+    // when a new file is created, one sector must be allocated. Thus, the inital
+    // file size, in bytes, is the cluster size, even if the file is empty.
+    frecord.bytesFileSize = clusterSize;
+    frecord.clustersFileSize = 1;
+    frecord.firstCluster = getNextFreeFATIndex();
+    FAT[frecord.firstCluster] = FAT_EOF;
+
+    // Allocates the Record on the dir and writes it to the disk
+    dir[i] = frecord;
+
+    // then i write the dir in its cluster
+    writeCluster((BYTE *)dir, dir[0].firstCluster);
+
+    // open the file and allocates it in the opened_files array
+    file = open2(filename);
+
+    if (!file) {
+        return CREATE_FILE_ERROR;
+    }
+
+    return file;
+}
 /*
  * Function that determines if a file specified by pathname
  * exists, opens it and returns its pointer.
@@ -279,8 +344,21 @@ Record* openFile(char *pathname) {
 
     // Goes through the file's dir to search for the file
     char* file_name = getFileName(pathname);
+
+    if (file_name == NULL){
+        printf("Invalid file name\n");
+        return NULL;
+    }
+
+    // User required to open the root dir
+    if (strncmp(file_name, "/", strlen(file_name)) == 0)
+    {
+        return root;
+    }
+
+    // It's a file inside the fileDir var
     short int  i;
-    for (i=2; i < recordsPerDir; i ++)
+    for (i=0; i < recordsPerDir; i ++)
     {
         // Found the file, now we must check if it's a link
         if (strncmp(file_name, fileDir[i].name, strlen(fileDir[i].name)) == 0)
@@ -357,6 +435,7 @@ int writeCluster(BYTE *buffer, int clusterNumber) {
 
 /*
  *  Function that returns the Record from a given file (dir, regular or link)
+ *  Probably won't be used.
  */
 Record *getFileRecord(char *path) {
   int isAbsolute = (*path == '/');
@@ -429,29 +508,6 @@ Record *getFileRecord(char *path) {
 }
 
 /*
- * Given a dir Record, this function reads its entries
- * and returns them in a DIRENT format.
- */
-DIRENT2* getDirEnt(Record* dir)
-{
-    /*BYTE buffer[SECTOR_SIZE];
-    Record * dir_ent = malloc(clusterSize);
-
-    int i;
-    for (i = 0; i < superblock.SectorsPerCluster; i++) {
-    int adds = superblock.DataSectorStart + (dir->firstCluster * superblock.SectorsPerCluster);
-    if (read_sector((adds + i), buffer) != 0) {
-      return NULL;
-    }
-    memcpy((dir_ent + (recordsPerSector * i)), buffer, SECTOR_SIZE);
-    }
-
-    return dir_ent;*/
-
-    return NULL;
-}
-
-/*
  * Function that iterates over the path to get the file name
  * (removing the path)
  */
@@ -491,7 +547,7 @@ void ls(Record *dir) {
  */
 int readDir(Record *dir) {
   BYTE buffer[SECTOR_SIZE];
-  ls(dir);
+  //ls(dir);
   int i;
   for (i = 0; i < superblock.SectorsPerCluster; i++) {
     int adds = superblock.DataSectorStart + (dir->firstCluster * superblock.SectorsPerCluster);
@@ -504,4 +560,15 @@ int readDir(Record *dir) {
   return FUNC_WORKING;
 }
 
+
+int isValidDirEntry(BYTE typeVal){
+
+    if (typeVal == TYPEVAL_DIRETORIO || typeVal == TYPEVAL_REGULAR || typeVal == TYPEVAL_LINK)
+    {
+        return VALID_TYPE;
+    }
+
+    return NOT_VALID_TYPE;
+
+}
 

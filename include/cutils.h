@@ -23,8 +23,8 @@ typedef struct t2fs_superbloco Superblock;
  * and the current pointer position, in bytes.
  */
 typedef struct open_file {
-  Record *frecord;          // file record
-  long int curr_pointer;    // current position pointer, in bytes
+  Record *frecord;     // file record
+  long int curr_pointer;    // current position pointer, in bytes or number of dirEntry
 } oFile;
 
 // **** GLOBAL VARIABLES
@@ -61,19 +61,19 @@ DWORD currentFreeFATIndex;
 DWORD lastFATIndex;
 
 // **** Functions's prototypes
-// TODO funão de inicializaão que lê o Superbloco e incializa as variáveis
-// necessárias
 
 Record* getLastDir(char *path);
 int initT2fs(void);
 void ls(Record *dir);
 char *getFileName(char *path);
 Record* openFile(char *pathname);
-DIRENT2 * getDirEnt(Record* dir);
 int getNextHandleNum();
 char * readCluster(int cluster);
+int isValidDirEntry(BYTE typeVal);
+//void formatString(char *string, char *new_string);
 DWORD getNextFreeFATIndex();
 int writeCluster(BYTE *buffer, int clusterNumber);
-Record *getFileRecord(char *path);
+FILE2 createFile(char *filename, int typeval);
+
 #endif
 
