@@ -519,9 +519,7 @@ int main()
     //readdir2(dirHandle, dirent);
     //printf("OOk");
 
-    fileHandle = open2("./dir1/../dir1/file1.txt");
-    printf("ok2");
-   /* char cmd[256];
+    char cmd[256];
     char *token;
     int i,n;
     int flagAchou, flagEncerrar;
@@ -558,7 +556,7 @@ int main()
 			if (!flagAchou) printf ("???\n");
         }
 		if (flagEncerrar) break;
-    } */
+    }
     return 0;
 }
 
