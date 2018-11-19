@@ -367,7 +367,7 @@ Record* openFile(char *pathname) {
     for (i=0; i < recordsPerDir; i ++)
     {
         // Found the file, now we must check if it's a link
-        if (strncmp(file_name, fileDir[i].name, strlen(fileDir[i].name)) == 0)
+        if (strncmp(file_name, fileDir[i].name, strlen(file_name)) == 0)
         {
             // It's a bloody link, we read the link's content
             // and open the respective file

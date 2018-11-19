@@ -628,15 +628,20 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry) {
 
     long int i = dirRecord.curr_pointer;
 
-    if ( isValidDirEntry(dirContent[i].TypeVal) == VALID_TYPE ){
+    while ( i < recordsPerDir ){
 
-        strncpy(dentry->name, dirContent[i].name, strlen(dirContent[i].name));
-        dentry->name[strlen(dirContent[i].name)] = '\0';
-        dentry->fileType = dirContent[i].TypeVal;
-        dentry->fileSize = dirContent[i].bytesFileSize;
-        opened_files[handle].curr_pointer += 1;
+        if ( isValidDirEntry(dirContent[i].TypeVal) == VALID_TYPE) {
 
-        return FUNC_WORKING;
+            strncpy(dentry->name, dirContent[i].name, strlen(dirContent[i].name));
+            dentry->name[strlen(dirContent[i].name)] = '\0';
+            dentry->fileType = dirContent[i].TypeVal;
+            dentry->fileSize = dirContent[i].bytesFileSize;
+            opened_files[handle].curr_pointer = i + 1;
+            return FUNC_WORKING;
+        }
+
+        i++;
+
     }
 
     return FUNC_NOT_WORKING;

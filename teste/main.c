@@ -457,20 +457,20 @@ void teste(int tstNumber) {
 			tst_identify();
 			break;
 		case 2:
-			tst_open("x.txt");
+			tst_open("file1.txt");
 			break;
 		case 3:
-			tst_read("x.txt");
+			tst_read("file1.txt");
 			break;
 		case 4:
 			tst_list_dir(".");
 			break;
 		case 5:
-			tst_seek("x.txt", 7);
+			tst_seek("file1.txt", 7);
 			break;
 
 		case 6:
-			tst_create("y.txt");
+			tst_create("file4.txt");
 			tst_list_dir(".");		// Verificação
 			break;
 		case 7:
@@ -482,7 +482,7 @@ void teste(int tstNumber) {
 			tst_read("y.txt");		// Verificação
 			break;
 		case 9:
-			tst_delete("y.txt");
+			tst_delete("file1.txt");
 			tst_list_dir(".");		// Verificação
 			break;
 
@@ -513,6 +513,9 @@ void teste(int tstNumber) {
 int main()
 {
     char cmd[] = "/dir1/teste.txt";
+
+    //teste(10);
+    //ln2("./pedronha", "./dir1");
     char *token;
     int i,n;
     int flagAchou, flagEncerrar;
@@ -531,6 +534,9 @@ int main()
     printf("buffer: %s\n\n", buffer);
 
     /*printf ("Testing for T2FS - v 2018.1.2\n");
+=======
+    printf ("Testing for T2FS - v 2018.1.2\n");
+>>>>>>> a8bf4d2350d4724769c4002b76b92bd513c7c2cf
     //token = strtok("who"," \t");
     strcpy(cmd, "man");
     token = strtok(cmd," \t");
@@ -635,10 +641,6 @@ int main()
     }*/
     return 0;
 }
-
-/**
-Encerra a operação do teste
-*/
 void cmdExit(void) {
     printf ("bye, bye!\n");
 }
