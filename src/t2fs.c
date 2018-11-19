@@ -196,8 +196,8 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o handle d
 FILE2 open2 (char *filename) {
     initT2fs();
 
-    ls(root);
-    ls(&root[11]);
+    //ls(root);
+    //ls(&root[11]);
     if (numberOfOpenedFiles == 10){
     // Maximum number of files opened
         printf("Maximum number of opened files reached");
@@ -556,6 +556,44 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int rmdir2 (char *pathname) {
   initT2fs();
 
+  // get the dir's name to delete
+  char *name = getFileName(pathname);
+  Record *parent = getLastDir(pathname);
+
+  int i = 0;
+  // search for the dir to delete
+  while (strncmp(parent[i].name, name, strlen(name)) != 0 && i < recordsPerDir) {
+    i++;
+  }
+
+  // if found the dir inside its parent
+  if (i < recordsPerDir) {
+    // free the dir's cluster
+    FAT[parent[i].firstCluster] = FAT_FREE_CLUSTER;
+
+    // transform the file Record into a invalid one
+    parent[i].TypeVal = TYPEVAL_INVALIDO;
+    //int nameSize = sizeof(parent[i].name);
+    memset(parent[i].name, '\0', 51);
+    parent[i].bytesFileSize = 0;
+    parent[i].clustersFileSize = 0;
+    parent[i].firstCluster = 0;
+
+    if (writeFAT() != FUNC_WORKING) {
+      return WRITE_ERROR;
+    }
+    if (writeCluster((BYTE *)parent, parent[0].firstCluster) != FUNC_WORKING) {
+      return WRITE_ERROR;
+    }
+  }
+  else {
+    printf("Directory does not exist.\n");
+    return NO_SUCH_FILE;
+  }
+
+  ls(parent);
+  printf("Directory deleted successfully\n");
+  return FUNC_WORKING;
 
 
   return FUNC_NOT_WORKING;
