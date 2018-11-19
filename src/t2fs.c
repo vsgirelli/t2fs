@@ -333,6 +333,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
   if (size < bytesLeftInCluster) {
     totalBytes += size;
     memcpy(buffer, (clusterVal + bytesToSkip), size);
+    opened_files[handle].curr_pointer += size;
     return totalBytes;
   }
   totalBytes += size;
