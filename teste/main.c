@@ -512,7 +512,7 @@ void teste(int tstNumber) {
 
 int main()
 {
-
+    //teste(13);
     //fhandle = open2("/link1");
 
     //printf("%d\n", fhandle);
@@ -528,7 +528,7 @@ int main()
     //printf("%d\n", fhandle);
     //freeIndex = getNextFreeFATIndex();
     //printf("%d", freeIndex)
-    chdir2("link4");
+    //chdir2("link4");
     char cmd[256];
     char *token;
     int i,n;

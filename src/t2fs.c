@@ -714,7 +714,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int getcwd2 (char *pathname, int size) {
   initT2fs();
 
-  if (size > MAX_FILE_NAME_SIZE) {
+  if (size < MAX_FILE_NAME_SIZE) {
     return INSUFICIENT_SIZE;
   }
 
