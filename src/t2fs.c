@@ -293,7 +293,6 @@ int read2 (FILE2 handle, char *buffer, int size) {
   // curr_pointer goes to final
   if(size + opened_files[handle].curr_pointer > rec->bytesFileSize){
     size = rec->bytesFileSize - opened_files[handle].curr_pointer - 1;
-    int sizeGreater = 1;
   }
 
 
@@ -368,7 +367,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
   }
 
   // update current pointer
-  opened_files[handle].curr_pointer += size;
+  opened_files[handle].curr_pointer += size + 1;
 
   return totalBytes;
 }
@@ -409,7 +408,56 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int truncate2 (FILE2 handle) {
   initT2fs();
 
-  return FUNC_NOT_WORKING;
+  // check if it is opened
+  if(opened_files_map[handle] == 0)
+    return TRUNCATE_ERROR;
+
+  Record *rec = opened_files[handle].frecord;
+
+  // get first cluster
+  DWORD clusterToRead = rec->firstCluster;
+
+  int startByte = 0;
+
+  if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+    return TRUNCATE_ERROR;
+
+  int numberOfClusterToSkip = opened_files[handle].curr_pointer / clusterSize;
+  int j;
+  for(j = 0; j < numberOfClusterToSkip; j++){
+    clusterToRead = FAT[clusterToRead];
+    if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+      return TRUNCATE_ERROR;
+  }
+
+  // byte to start the trucate
+  startByte = opened_files[handle].curr_pointer - clusterSize * numberOfClusterToSkip;
+
+  //update bytesFileSize for the file
+  rec->bytesFileSize = opened_files[handle].curr_pointer;
+  rec->clustersFileSize = numberOfClusterToSkip + 1;
+
+  while(clusterToRead != FAT_EOF ){
+    BYTE *buffer = readCluster(clusterToRead);
+    memset(buffer + startByte, '\0', clusterSize - startByte);
+    startByte = 0;
+    writeCluster(buffer, clusterToRead);
+    if(startByte == 0)
+      FAT[clusterToRead] = FAT_FREE_CLUSTER;
+    clusterToRead = FAT[clusterToRead];
+  }
+
+  if(clusterToRead == FAT_EOF){
+    BYTE *buffer = readCluster(clusterToRead);
+    memset(buffer + startByte, '\0', clusterSize - startByte);
+    startByte = 0;
+    writeCluster(buffer, clusterToRead);
+    if(startByte == 0)
+      FAT[clusterToRead] = FAT_FREE_CLUSTER;
+    clusterToRead = FAT[clusterToRead];
+  }
+
+  return FUNC_WORKING;
 }
 
 
