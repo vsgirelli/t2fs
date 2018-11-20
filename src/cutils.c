@@ -182,7 +182,7 @@ int readSuperblock() {
   superblock.pFATSectorStart = *( (DWORD*) (buffer + 20) );
   superblock.RootDirCluster = *( (DWORD*) (buffer + 24) );
   superblock.DataSectorStart = *( (DWORD*) (buffer + 28) );
-  printf("superblock.id: %s\n", superblock.id);
+  /*printf("superblock.id: %s\n", superblock.id);
   printf("superblock.version: %d\n", superblock.version);
   printf("superblock.superblockSize: %d\n", superblock.superblockSize);
   printf("superblock.DiskSize: %d\n", superblock.DiskSize);
@@ -190,7 +190,7 @@ int readSuperblock() {
   printf("superblock.SectorsPerCluster: %d\n", superblock.SectorsPerCluster);
   printf("superblock.pFATSectorStart: %d\n", superblock.pFATSectorStart);
   printf("superblock.RootDirCluster: %d\n", superblock.RootDirCluster);
-  printf("superblock.DataSectorStart: %d\n", superblock.DataSectorStart);
+  printf("superblock.DataSectorStart: %d\n", superblock.DataSectorStart);*/
 
   return FUNC_WORKING;
 }

@@ -512,6 +512,7 @@ void teste(int tstNumber) {
 
 int main()
 {
+    //teste(12);
     //teste(13);
     //fhandle = open2("/link1");
 

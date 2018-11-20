@@ -263,7 +263,7 @@ int close2 (FILE2 handle) {
         return NO_SUCH_FILE;
     }
 
-    opened_files_map[handle] = 1;
+    opened_files_map[handle] = 0;
 
     return FUNC_WORKING;
 }
@@ -293,6 +293,13 @@ int read2 (FILE2 handle, char *buffer, int size) {
   Record *rec = opened_files[handle].frecord;
 
   int totalBytes = 0;
+
+  if (opened_files[handle].curr_pointer >= rec->bytesFileSize)
+  {
+      printf("EOF reached, what are you doing?\n");
+      return OPEN_ERROR;
+  }
+
   // trying to read a size greater than the record
   // curr_pointer goes to final
   if(size + opened_files[handle].curr_pointer > rec->bytesFileSize){
@@ -337,7 +344,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
     opened_files[handle].curr_pointer += size;
     return totalBytes;
   }
-  totalBytes += size;
+  totalBytes += bytesLeftInCluster;
   memcpy(buffer, (clusterVal + bytesToSkip), bytesLeftInCluster);
 
   // from the size bytes, already read the bytes above
@@ -439,25 +446,39 @@ int truncate2 (FILE2 handle) {
   rec->bytesFileSize = opened_files[handle].curr_pointer;
   rec->clustersFileSize = numberOfClusterToSkip + 1;
 
+  DWORD previousCluster;
   while(clusterToRead != FAT_EOF ){
-    BYTE *buffer = readCluster(clusterToRead);
+    previousCluster = clusterToRead;
+    char *buffer = readCluster(clusterToRead);
     memset(buffer + startByte, '\0', clusterSize - startByte);
+    writeCluster((BYTE *) buffer, clusterToRead);
+    if(startByte == 0) {
+      clusterToRead = FAT[clusterToRead];
+      FAT[previousCluster] = FAT_FREE_CLUSTER;
+    }
+    else {
+       clusterToRead = FAT[previousCluster];
+    }
     startByte = 0;
-    writeCluster(buffer, clusterToRead);
-    if(startByte == 0)
-      FAT[clusterToRead] = FAT_FREE_CLUSTER;
-    clusterToRead = FAT[clusterToRead];
   }
 
   if(clusterToRead == FAT_EOF){
-    BYTE *buffer = readCluster(clusterToRead);
+    char *buffer = readCluster(clusterToRead);
     memset(buffer + startByte, '\0', clusterSize - startByte);
-    startByte = 0;
-    writeCluster(buffer, clusterToRead);
+
+    writeCluster((BYTE *) buffer, clusterToRead);
     if(startByte == 0)
       FAT[clusterToRead] = FAT_FREE_CLUSTER;
     clusterToRead = FAT[clusterToRead];
+    startByte = 0;
   }
+
+  if (writeFAT() != FUNC_WORKING) {
+     return WRITE_ERROR;
+  }
+
+
+
 
   return FUNC_WORKING;
 }
@@ -906,7 +927,7 @@ int closedir2 (DIR2 handle) {
         return NO_SUCH_FILE;
     }
 
-    opened_files_map[handle] = 1;
+    opened_files_map[handle] = 0;
 
     return FUNC_WORKING;
 }
