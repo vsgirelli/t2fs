@@ -22,6 +22,7 @@ unsigned int createFile(char * filename, int typeval);
 Record* openFile(char *pathname);
 Record* getLastDir(char *path);
 char *getFileName(char *path);
+void updateDir(oFile ofile);
 
 int initFat(void);
 int writeFAT(void);
@@ -328,8 +329,27 @@ unsigned int createFile(char * filename, int typeval)
 
     printf("File created successfully\n");
     return frecord.firstCluster;
+}
 
+void updateDir(oFile ofile) {
+  // updates the file Record on the dir
+  Record *dir = (Record *) readCluster(ofile.parentCluster);
+  Record *file = ofile.frecord;
+  // search for the file in the dir
+  int i = 0;
+  while (strncmp(dir[i].name, file->name, strlen(file->name)) != 0 && i < recordsPerDir) {
+    i++;
   }
+  // if found the file inside its parent
+  if (i < recordsPerDir) {
+    // updates the file Record
+    dir[i] = *file;
+    // updates the parent dir with the new file Record
+    writeCluster((BYTE *)dir, dir[0].firstCluster);
+  }
+  //ls(dir);
+}
+
 /*
  * Function that determines if a file specified by pathname
  * exists, opens it and returns its pointer.

@@ -80,6 +80,7 @@ int writeCluster(BYTE *buffer, int clusterNumber);
 unsigned int createFile(char *filename, int typeval);
 int writeFAT(void);
 void fixPath(char *path);
+void updateDir(oFile ofile);
 
 #endif
 

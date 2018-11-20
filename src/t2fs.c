@@ -180,7 +180,7 @@ int delete2 (char *filename) {
     return NO_SUCH_FILE;
   }
 
-  ls(parent);
+  //ls(parent);
   printf("File deleted successfully\n");
   return FUNC_WORKING;
 }
@@ -267,6 +267,7 @@ int close2 (FILE2 handle) {
     }
 
     opened_files_map[handle] = 0;
+    numberOfOpenedFiles--;
 
     return FUNC_WORKING;
 }
@@ -441,6 +442,7 @@ int write2 (FILE2 handle, char *buffer, int size) {
     writeCluster((BYTE *)clusterVal, clusterToRead);
     // update file size
     rec->bytesFileSize = rec->bytesFileSize + size;
+    updateDir(opened_files[handle]);
     printf("Successfully wrote into file\n");
     return FUNC_WORKING;
   }
@@ -466,6 +468,7 @@ int write2 (FILE2 handle, char *buffer, int size) {
     writeCluster(cluster, newCluster);
     // update file size
     rec->bytesFileSize = rec->bytesFileSize + size;
+    updateDir(opened_files[handle]);
     printf("Successfully wrote into file\n");
     return FUNC_WORKING;
   }
@@ -494,20 +497,7 @@ int write2 (FILE2 handle, char *buffer, int size) {
     rec->bytesFileSize = rec->bytesFileSize + size;
   }
 
-  // updates the file Record on the dir
-  Record *dir = (Record *) readCluster(opened_files[handle].parentCluster);
-  // search for the file in the dir
-  i = 0;
-  while (strncmp(dir[i].name, rec->name, strlen(rec->name)) != 0 && i < recordsPerDir) {
-    i++;
-  }
-  // if found the file inside its parent
-  if (i < recordsPerDir) {
-    // updates the file Record
-    dir[i] = *rec;
-    // updates the parent dir with the new file Record
-    writeCluster((BYTE *)dir, dir[0].firstCluster);
-  }
+  updateDir(opened_files[handle]);
 
   // update current pointer
   opened_files[handle].curr_pointer += size + 1;
@@ -778,7 +768,7 @@ int rmdir2 (char *pathname) {
   if (i < recordsPerDir) {
     // opens the dir to check if it is empty
     Record *dir = (Record *) readCluster(parent[i].firstCluster);
-    ls(dir);
+    //ls(dir);
     int j;
     for (j = 2; j < recordsPerDir; j++) {
       if (dir[j].TypeVal != TYPEVAL_INVALIDO) {
@@ -1041,6 +1031,7 @@ int closedir2 (DIR2 handle) {
     }
 
     opened_files_map[handle] = 0;
+    numberOfOpenedFiles--;
 
     return FUNC_WORKING;
 }
