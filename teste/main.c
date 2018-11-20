@@ -513,8 +513,12 @@ void teste(int tstNumber) {
 int main()
 {
 
-    rmdir2("/dir1/");
-    open2("file2.txt");
+    int handle = open2("file1.txt");
+    char buffer[] = "olar olar olar olar\n";
+    write2(handle, buffer, sizeof(buffer));
+    char inbuffer[74];
+    read2(handle, inbuffer, 74);
+    printf("inbuffer: %s\n", inbuffer);
 
     //fhandle = open2("/link1");
 

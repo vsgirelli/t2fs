@@ -90,7 +90,7 @@ FILE2 create2 (char *filename) {
   strcpy(frecord.name, name);
   // when a new file is created, one sector must be allocated. Thus, the inital
   // file size, in bytes, is the cluster size, even if the file is empty.
-  frecord.bytesFileSize = clusterSize;
+  frecord.bytesFileSize = 0;
   frecord.clustersFileSize = 1;
   frecord.firstCluster = getNextFreeFATIndex();
   FAT[frecord.firstCluster] = FAT_EOF;
@@ -296,7 +296,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
 
   // int division -> return flow
   // don't need to round up, beacause we are reading the first one out side the for
-  int numberOfclusterToRead = size / clusterSize;
+  int numberOfClustersToRead = size / clusterSize;
 
   // get the first cluster according to the curr_pointer, skipping when size is greater than cluster size
   int numberOfClusterToSkip = opened_files[handle].curr_pointer / clusterSize;
@@ -333,10 +333,10 @@ int read2 (FILE2 handle, char *buffer, int size) {
   if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
     return READ_ERROR;
 
-  for (i = 1; i <= numberOfclusterToRead - numberOfClusterToSkip; i++){
+  for (i = 1; i <= numberOfClustersToRead - numberOfClusterToSkip; i++){
     clusterVal = readCluster(clusterToRead);
     // if it is the last cluster, copy just the necessary size
-    if(numberOfclusterToRead - numberOfClusterToSkip == i){
+    if(numberOfClustersToRead - numberOfClusterToSkip == i){
       memcpy(buffer + (clusterSize*i), clusterVal, bytesLeftToRead);
     }
     else {
@@ -352,7 +352,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
   }
 
   // update current pointer
-  opened_files[handle].curr_pointer += size;
+  opened_files[handle].curr_pointer += size + 1;
 
   return FUNC_WORKING;
 }
@@ -374,7 +374,108 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna o número 
 int write2 (FILE2 handle, char *buffer, int size) {
   initT2fs();
 
-  return FUNC_NOT_WORKING;
+  // check if it is opened
+  if(opened_files_map[handle] == 0)
+    return WRITE_ERROR;
+
+  Record *rec = opened_files[handle].frecord;
+
+  // get first cluster
+  DWORD clusterToRead = rec->firstCluster;
+
+  if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+    return READ_ERROR;
+
+  // get the number of the clusters in the file
+  int numberOfClusterToSkip = rec->clustersFileSize - 1;
+  int j;
+  for(j = 0; j < numberOfClusterToSkip; j++){
+    clusterToRead = FAT[clusterToRead];
+    if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+      return READ_ERROR;
+  }
+
+  // read the first cluster out of the for
+  char *clusterVal = readCluster(clusterToRead);
+  // indicates how many bytes inside the cluster must be skiped due to the bytesFileSize
+  int bytesToSkip = (rec->bytesFileSize - (numberOfClusterToSkip * clusterSize)) - 1;
+  if (bytesToSkip < 0 )
+    bytesToSkip = 0;
+
+  // count how many bytes are left on the current cluster
+  int bytesLeftInCluster = (clusterSize - bytesToSkip + 1);
+  if (bytesLeftInCluster > clusterSize)
+    bytesLeftInCluster = clusterSize;
+
+  if (size < bytesLeftInCluster) {
+    // writes the buffer in the cluster
+    memcpy((clusterVal + bytesToSkip), buffer, size);
+    // and writes the cluster back to disk
+    writeCluster((BYTE *)clusterVal, clusterToRead);
+    // update file size
+    rec->bytesFileSize = rec->bytesFileSize + size;
+    printf("Successfully wrote into file\n");
+    return FUNC_WORKING;
+  }
+  memcpy((clusterVal + bytesToSkip), buffer, bytesLeftInCluster);
+
+  // from the size bytes, already wrote the bytes above
+  // so, there are left x bytes to write
+  int bytesLeftToWrite = size - bytesLeftInCluster;
+  int clustersToAllocate = bytesLeftToWrite/clusterSize;
+  int i;
+  // finds a new free cluster to allocate for the file
+  int newCluster = getNextFreeFATIndex();
+  FAT[clusterToRead] = newCluster;
+  clusterToRead = newCluster;
+  BYTE *cluster = malloc(sizeof(clusterSize));
+  // cleans the new cluster
+  memset(cluster, '\0', clusterSize);
+
+  // if the bytesLeftToWrite fit inside one single cluster
+  if (clustersToAllocate == 0) {
+    memcpy(cluster, buffer, bytesLeftToWrite);
+    // and writes the cluster back to disk
+    writeCluster(cluster, newCluster);
+    // update file size
+    rec->bytesFileSize = rec->bytesFileSize + size;
+    printf("Successfully wrote into file\n");
+    return FUNC_WORKING;
+  }
+  else {
+    for (i = 1; i <= clustersToAllocate; i++) {
+      memcpy(cluster, buffer, clusterSize);
+      // wrote more #clusterSize bytes
+      bytesLeftToWrite -= clusterSize;
+      // and writes the cluster into the disk
+      writeCluster(cluster, newCluster);
+      // finds a new free cluster
+      newCluster = getNextFreeFATIndex();
+      // updates FAT to point to this new cluster
+      FAT[clusterToRead] = newCluster;
+      clusterToRead = newCluster;
+      memset(cluster, '\0', clusterSize);
+      rec->clustersFileSize = rec->clustersFileSize + clustersToAllocate;
+    }
+    if (bytesLeftToWrite > 0) {
+      // write the remain bytes
+      memcpy(cluster, buffer, bytesLeftToWrite);
+      writeCluster(cluster, newCluster);
+      FAT[newCluster] = FAT_EOF;
+      rec->clustersFileSize = rec->clustersFileSize + clustersToAllocate + 1;
+    }
+    rec->bytesFileSize = rec->bytesFileSize + size;
+  }
+
+  // updates the file Record on the dir
+  //Record *dir = (Record *) readCluster(rec);
+
+  // update current pointer
+  opened_files[handle].curr_pointer += size + 1;
+
+  printf("Successfully wrote into file\n");
+
+  return FUNC_WORKING;
 }
 
 
@@ -707,7 +808,7 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int getcwd2 (char *pathname, int size) {
   initT2fs();
 
-  if (size > MAX_FILE_NAME_SIZE) {
+  if (size < MAX_FILE_NAME_SIZE) {
     return INSUFICIENT_SIZE;
   }
 
