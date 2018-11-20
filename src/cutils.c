@@ -343,18 +343,18 @@ Record* openFile(char *pathname) {
       return NULL;
     }
 
+    // User required to open the root dir
+    if (strncmp(pathname, "/", strlen(pathname)) == 0)
+    {
+        return root;
+    }
+
     // Goes through the file's dir to search for the file
     char* file_name = getFileName(pathname);
 
     if (file_name == NULL){
         printf("Invalid file name\n");
         return NULL;
-    }
-
-    // User required to open the root dir
-    if (strncmp(file_name, "/", strlen(file_name)) == 0)
-    {
-        return root;
     }
 
     // It's a file inside the fileDir var
