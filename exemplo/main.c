@@ -519,6 +519,13 @@ int main()
     //readdir2(dirHandle, dirent);
     //printf("OOk");
 
+    //int handle = open2("file2.txt");
+
+    //char *buffer = (char*)malloc(sizeof(char)*1024);
+
+    //read2(handle,buffer,50);
+    //printf("%s",buffer);
+
     char cmd[256];
     char *token;
     int i,n;

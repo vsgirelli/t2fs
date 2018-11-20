@@ -291,9 +291,14 @@ int read2 (FILE2 handle, char *buffer, int size) {
     return READ_ERROR;
 
   Record *rec = opened_files[handle].frecord;
+
+  int totalBytes = 0;
   // trying to read a size greater than the record
-  if(size + opened_files[handle].curr_pointer > rec->bytesFileSize)
-    return READ_ERROR;
+  // curr_pointer goes to final
+  if(size + opened_files[handle].curr_pointer > rec->bytesFileSize){
+    size = rec->bytesFileSize - opened_files[handle].curr_pointer - 1;
+  }
+
 
   // get first cluster
   DWORD clusterToRead = rec->firstCluster;
@@ -327,9 +332,12 @@ int read2 (FILE2 handle, char *buffer, int size) {
     bytesLeftInCluster = clusterSize;
 
   if (size < bytesLeftInCluster) {
+    totalBytes += size;
     memcpy(buffer, (clusterVal + bytesToSkip), size);
-    return FUNC_WORKING;
+    opened_files[handle].curr_pointer += size;
+    return totalBytes;
   }
+  totalBytes += size;
   memcpy(buffer, (clusterVal + bytesToSkip), bytesLeftInCluster);
 
   // from the size bytes, already read the bytes above
@@ -344,9 +352,11 @@ int read2 (FILE2 handle, char *buffer, int size) {
     clusterVal = readCluster(clusterToRead);
     // if it is the last cluster, copy just the necessary size
     if(numberOfclusterToRead - numberOfClusterToSkip == i){
+      totalBytes += bytesLeftToRead;
       memcpy(buffer + (clusterSize*i), clusterVal, bytesLeftToRead);
     }
     else {
+      totalBytes += clusterSize;
       memcpy(buffer + (clusterSize*i), clusterVal, clusterSize);
       bytesLeftToRead -= clusterSize;
     }
@@ -359,9 +369,9 @@ int read2 (FILE2 handle, char *buffer, int size) {
   }
 
   // update current pointer
-  opened_files[handle].curr_pointer += size;
+  opened_files[handle].curr_pointer += size + 1;
 
-  return FUNC_WORKING;
+  return totalBytes;
 }
 
 
@@ -400,7 +410,56 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int truncate2 (FILE2 handle) {
   initT2fs();
 
-  return FUNC_NOT_WORKING;
+  // check if it is opened
+  if(opened_files_map[handle] == 0)
+    return TRUNCATE_ERROR;
+
+  Record *rec = opened_files[handle].frecord;
+
+  // get first cluster
+  DWORD clusterToRead = rec->firstCluster;
+
+  int startByte = 0;
+
+  if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+    return TRUNCATE_ERROR;
+
+  int numberOfClusterToSkip = opened_files[handle].curr_pointer / clusterSize;
+  int j;
+  for(j = 0; j < numberOfClusterToSkip; j++){
+    clusterToRead = FAT[clusterToRead];
+    if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+      return TRUNCATE_ERROR;
+  }
+
+  // byte to start the trucate
+  startByte = opened_files[handle].curr_pointer - clusterSize * numberOfClusterToSkip;
+
+  //update bytesFileSize for the file
+  rec->bytesFileSize = opened_files[handle].curr_pointer;
+  rec->clustersFileSize = numberOfClusterToSkip + 1;
+
+  while(clusterToRead != FAT_EOF ){
+    BYTE *buffer = readCluster(clusterToRead);
+    memset(buffer + startByte, '\0', clusterSize - startByte);
+    startByte = 0;
+    writeCluster(buffer, clusterToRead);
+    if(startByte == 0)
+      FAT[clusterToRead] = FAT_FREE_CLUSTER;
+    clusterToRead = FAT[clusterToRead];
+  }
+
+  if(clusterToRead == FAT_EOF){
+    BYTE *buffer = readCluster(clusterToRead);
+    memset(buffer + startByte, '\0', clusterSize - startByte);
+    startByte = 0;
+    writeCluster(buffer, clusterToRead);
+    if(startByte == 0)
+      FAT[clusterToRead] = FAT_FREE_CLUSTER;
+    clusterToRead = FAT[clusterToRead];
+  }
+
+  return FUNC_WORKING;
 }
 
 
@@ -422,19 +481,19 @@ int seek2 (FILE2 handle, DWORD offset) {
   initT2fs();
 
   if(opened_files_map[handle] == 0){
-    printf("Error File not open!");
+    //printf("Error File not open!");
     return SEEK_ERROR;
   }
 
   Record *rec = opened_files[handle].frecord;
 
   if((int)offset > (int)rec->bytesFileSize || (int)offset < -1){
-    printf("To big or to small! offset:%d\nsize:%d",offset,rec->bytesFileSize);
+    //printf("To big or to small! offset:%d\nsize:%d",offset,rec->bytesFileSize);
     return SEEK_ERROR;
   }
 
   if(offset == -1){
-    opened_files[handle].curr_pointer += rec->bytesFileSize;
+    opened_files[handle].curr_pointer = rec->bytesFileSize;
   }
   else{
     opened_files[handle].curr_pointer = offset;
