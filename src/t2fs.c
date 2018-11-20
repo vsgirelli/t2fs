@@ -222,6 +222,8 @@ FILE2 open2 (char *filename) {
         return OPEN_ERROR;
     }
 
+    // gets the parent
+    Record *parent = getLastDir(filename);
 
     numberOfOpenedFiles += 1;
     FILE2 FILE_HANDLE;
@@ -233,6 +235,7 @@ FILE2 open2 (char *filename) {
 
     openedFile.curr_pointer =  0;
     openedFile.frecord = openedRecord;
+    openedFile.parentCluster = parent[0].firstCluster;
 
     FILE_HANDLE = getNextHandleNum();
 
@@ -492,7 +495,19 @@ int write2 (FILE2 handle, char *buffer, int size) {
   }
 
   // updates the file Record on the dir
-  //Record *dir = (Record *) readCluster(rec);
+  Record *dir = (Record *) readCluster(opened_files[handle].parentCluster);
+  // search for the file in the dir
+  i = 0;
+  while (strncmp(dir[i].name, rec->name, strlen(rec->name)) != 0 && i < recordsPerDir) {
+    i++;
+  }
+  // if found the file inside its parent
+  if (i < recordsPerDir) {
+    // updates the file Record
+    dir[i] = *rec;
+    // updates the parent dir with the new file Record
+    writeCluster((BYTE *)dir, dir[0].firstCluster);
+  }
 
   // update current pointer
   opened_files[handle].curr_pointer += size + 1;
