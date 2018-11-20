@@ -18,7 +18,7 @@ int isValidDirEntry(BYTE typeVal);
 int getNextHandleNum(void);
 
 Record *getFileRecord(char *path);
-FILE2 createFile(char * filename, int typeval);
+unsigned int createFile(char * filename, int typeval);
 Record* openFile(char *pathname);
 Record* getLastDir(char *path);
 char *getFileName(char *path);
@@ -182,7 +182,7 @@ int readSuperblock() {
   superblock.pFATSectorStart = *( (DWORD*) (buffer + 20) );
   superblock.RootDirCluster = *( (DWORD*) (buffer + 24) );
   superblock.DataSectorStart = *( (DWORD*) (buffer + 28) );
-  printf("superblock.id: %s\n", superblock.id);
+  /*printf("superblock.id: %s\n", superblock.id);
   printf("superblock.version: %d\n", superblock.version);
   printf("superblock.superblockSize: %d\n", superblock.superblockSize);
   printf("superblock.DiskSize: %d\n", superblock.DiskSize);
@@ -190,7 +190,7 @@ int readSuperblock() {
   printf("superblock.SectorsPerCluster: %d\n", superblock.SectorsPerCluster);
   printf("superblock.pFATSectorStart: %d\n", superblock.pFATSectorStart);
   printf("superblock.RootDirCluster: %d\n", superblock.RootDirCluster);
-  printf("superblock.DataSectorStart: %d\n", superblock.DataSectorStart);
+  printf("superblock.DataSectorStart: %d\n", superblock.DataSectorStart);*/
 
   return FUNC_WORKING;
 }
@@ -276,43 +276,38 @@ Record* getLastDir(char *path) {
   }
 }
 
-FILE2 createFile(char * filename, int typeval)
+unsigned int createFile(char * filename, int typeval)
 {
     if (typeval < TYPEVAL_DIRETORIO || typeval > TYPEVAL_LINK)
     {
         printf("Invalid typeval\n");
         return TYPEVAL_INVALIDO;
-    }
-
-    Record *dir = getLastDir(filename);
-
-    // filehandler
-    FILE2 file = 0;
+    }  Record *dir = getLastDir(filename);
 
     char *name = getFileName(filename);
 
     // check if the file already exists
     int i;
     for (i = 0; i < recordsPerDir; i++) {
-        if (strncmp(name, dir[i].name, strlen(name)) == 0) {
-          printf("File already exists\n");
-          return CREATE_FILE_ERROR;
-        }
+    if (strncmp(name, dir[i].name, strlen(name)) == 0) {
+      printf("File already exists\n");
+      return CREATE_FILE_ERROR;
+    }
     }
 
     // finds a invalid Record on the dir where the file can be allocated
     i = 0;
     while (dir[i].TypeVal != TYPEVAL_INVALIDO) {
-        i++;
+    i++;
     }
     if (i > recordsPerDir) {
-        printf("Directory already full\n");
-        return CREATE_FILE_ERROR;
+    printf("Directory already full\n");
+    return CREATE_FILE_ERROR;
     }
 
     // creating a Record for the file
     Record frecord;
-    frecord.TypeVal = (BYTE)typeval;
+    frecord.TypeVal = (BYTE ) typeval;
     strcpy(frecord.name, name);
     // when a new file is created, one sector must be allocated. Thus, the inital
     // file size, in bytes, is the cluster size, even if the file is empty.
@@ -324,18 +319,17 @@ FILE2 createFile(char * filename, int typeval)
     // Allocates the Record on the dir and writes it to the disk
     dir[i] = frecord;
 
-    // then i write the dir in its cluster
-    writeCluster((BYTE *)dir, dir[0].firstCluster);
-
-    // open the file and allocates it in the opened_files array
-    file = open2(filename);
-
-    if (!file) {
-        return CREATE_FILE_ERROR;
+    if (writeFAT() != FUNC_WORKING) {
+    return WRITE_ERROR;
+    }
+    if (writeCluster((BYTE *)dir, dir[0].firstCluster) != FUNC_WORKING) {
+    return WRITE_ERROR;
     }
 
-    return file;
-}
+    printf("File created successfully\n");
+    return frecord.firstCluster;
+
+  }
 /*
  * Function that determines if a file specified by pathname
  * exists, opens it and returns its pointer.

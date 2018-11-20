@@ -144,6 +144,13 @@ int delete2 (char *filename) {
     DWORD cluster = parent[i].firstCluster;
     DWORD nextCluster = 0;
 
+    if (FAT[cluster] == FAT_BAD_CLUSTER)
+    {
+        printf("File has badblock X(\n");
+        return OPEN_ERROR;
+    }
+
+
     while (FAT[cluster] != FAT_EOF) {
       // saves the pointer to the next file cluster
       nextCluster = FAT[cluster];
@@ -256,7 +263,7 @@ int close2 (FILE2 handle) {
         return NO_SUCH_FILE;
     }
 
-    opened_files_map[handle] = 1;
+    opened_files_map[handle] = 0;
 
     return FUNC_WORKING;
 }
@@ -284,9 +291,21 @@ int read2 (FILE2 handle, char *buffer, int size) {
     return READ_ERROR;
 
   Record *rec = opened_files[handle].frecord;
+
+  int totalBytes = 0;
+
+  if (opened_files[handle].curr_pointer >= rec->bytesFileSize)
+  {
+      printf("EOF reached, what are you doing?\n");
+      return OPEN_ERROR;
+  }
+
   // trying to read a size greater than the record
-  if(size + opened_files[handle].curr_pointer > rec->bytesFileSize)
-    return READ_ERROR;
+  // curr_pointer goes to final
+  if(size + opened_files[handle].curr_pointer > rec->bytesFileSize){
+    size = rec->bytesFileSize - opened_files[handle].curr_pointer - 1;
+  }
+
 
   // get first cluster
   DWORD clusterToRead = rec->firstCluster;
@@ -320,9 +339,12 @@ int read2 (FILE2 handle, char *buffer, int size) {
     bytesLeftInCluster = clusterSize;
 
   if (size < bytesLeftInCluster) {
+    totalBytes += size;
     memcpy(buffer, (clusterVal + bytesToSkip), size);
-    return FUNC_WORKING;
+    opened_files[handle].curr_pointer += size;
+    return totalBytes;
   }
+  totalBytes += bytesLeftInCluster;
   memcpy(buffer, (clusterVal + bytesToSkip), bytesLeftInCluster);
 
   // from the size bytes, already read the bytes above
@@ -337,9 +359,11 @@ int read2 (FILE2 handle, char *buffer, int size) {
     clusterVal = readCluster(clusterToRead);
     // if it is the last cluster, copy just the necessary size
     if(numberOfClustersToRead - numberOfClusterToSkip == i){
+      totalBytes += bytesLeftToRead;
       memcpy(buffer + (clusterSize*i), clusterVal, bytesLeftToRead);
     }
     else {
+      totalBytes += clusterSize;
       memcpy(buffer + (clusterSize*i), clusterVal, clusterSize);
       bytesLeftToRead -= clusterSize;
     }
@@ -354,7 +378,7 @@ int read2 (FILE2 handle, char *buffer, int size) {
   // update current pointer
   opened_files[handle].curr_pointer += size + 1;
 
-  return FUNC_WORKING;
+  return totalBytes;
 }
 
 
@@ -494,7 +518,67 @@ Saída:	Se a operação foi realizada com sucesso, a função retorna "0" (zero)
 int truncate2 (FILE2 handle) {
   initT2fs();
 
-  return FUNC_NOT_WORKING;
+  // check if it is opened
+  if(opened_files_map[handle] == 0)
+    return TRUNCATE_ERROR;
+
+  Record *rec = opened_files[handle].frecord;
+
+  // get first cluster
+  DWORD clusterToRead = rec->firstCluster;
+
+  int startByte = 0;
+
+  if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+    return TRUNCATE_ERROR;
+
+  int numberOfClusterToSkip = opened_files[handle].curr_pointer / clusterSize;
+  int j;
+  for(j = 0; j < numberOfClusterToSkip; j++){
+    clusterToRead = FAT[clusterToRead];
+    if(FAT[clusterToRead] == FAT_BAD_CLUSTER)
+      return TRUNCATE_ERROR;
+  }
+
+  // byte to start the trucate
+  startByte = opened_files[handle].curr_pointer - clusterSize * numberOfClusterToSkip;
+
+  //update bytesFileSize for the file
+  rec->bytesFileSize = opened_files[handle].curr_pointer;
+  rec->clustersFileSize = numberOfClusterToSkip + 1;
+
+  DWORD previousCluster;
+  while(clusterToRead != FAT_EOF ){
+    previousCluster = clusterToRead;
+    char *buffer = readCluster(clusterToRead);
+    memset(buffer + startByte, '\0', clusterSize - startByte);
+    writeCluster((BYTE *) buffer, clusterToRead);
+    if(startByte == 0) {
+      clusterToRead = FAT[clusterToRead];
+      FAT[previousCluster] = FAT_FREE_CLUSTER;
+    }
+    else {
+       clusterToRead = FAT[previousCluster];
+    }
+    startByte = 0;
+  }
+
+  if(clusterToRead == FAT_EOF){
+    char *buffer = readCluster(clusterToRead);
+    memset(buffer + startByte, '\0', clusterSize - startByte);
+
+    writeCluster((BYTE *) buffer, clusterToRead);
+    if(startByte == 0)
+      FAT[clusterToRead] = FAT_FREE_CLUSTER;
+    clusterToRead = FAT[clusterToRead];
+    startByte = 0;
+  }
+
+  if (writeFAT() != FUNC_WORKING) {
+     return WRITE_ERROR;
+  }
+
+  return FUNC_WORKING;
 }
 
 
@@ -516,19 +600,19 @@ int seek2 (FILE2 handle, DWORD offset) {
   initT2fs();
 
   if(opened_files_map[handle] == 0){
-    printf("Error File not open!");
+    //printf("Error File not open!");
     return SEEK_ERROR;
   }
 
   Record *rec = opened_files[handle].frecord;
 
   if((int)offset > (int)rec->bytesFileSize || (int)offset < -1){
-    printf("To big or to small! offset:%d\nsize:%d",offset,rec->bytesFileSize);
+    //printf("To big or to small! offset:%d\nsize:%d",offset,rec->bytesFileSize);
     return SEEK_ERROR;
   }
 
   if(offset == -1){
-    opened_files[handle].curr_pointer += rec->bytesFileSize;
+    opened_files[handle].curr_pointer = rec->bytesFileSize;
   }
   else{
     opened_files[handle].curr_pointer = offset;
@@ -709,7 +793,7 @@ int rmdir2 (char *pathname) {
     FAT[parent[i].firstCluster] = FAT_FREE_CLUSTER;
     // transform the dir Record into a invalid one inside the parent
     parent[i] = nullRecord;
-    
+
     // updates the FAT
     if (writeFAT() != FUNC_WORKING) {
       return WRITE_ERROR;
@@ -941,7 +1025,7 @@ int closedir2 (DIR2 handle) {
         return NO_SUCH_FILE;
     }
 
-    opened_files_map[handle] = 1;
+    opened_files_map[handle] = 0;
 
     return FUNC_WORKING;
 }
@@ -961,7 +1045,6 @@ int ln2(char *linkname, char *filename) {
     initT2fs();
 
     Record * orig_file;
-    Record * link_file;
 
     if ( (orig_file = openFile(filename)) == NULL)
     {
@@ -988,18 +1071,15 @@ int ln2(char *linkname, char *filename) {
         return INVALID_LINK_TYPE;
     }
 
-    FILE2 link_handle = createFile(linkname, TYPEVAL_LINK);
+    unsigned int recordCluster = createFile(linkname, TYPEVAL_LINK);
 
-    if (link_handle == CREATE_FILE_ERROR)
+    if (recordCluster == CREATE_FILE_ERROR)
     {
         printf("Couldn't create the link\n");
         return CREATE_FILE_ERROR;
     }
 
-    close2(link_handle);
-
-    link_file = openFile(linkname);
-    writeCluster( (BYTE *)filename, link_file->firstCluster);
+    writeCluster( (BYTE *)filename, recordCluster);
 
     return FUNC_WORKING;
 }

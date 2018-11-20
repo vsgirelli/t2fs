@@ -76,7 +76,7 @@ int isValidDirEntry(BYTE typeVal);
 //void formatString(char *string, char *new_string);
 DWORD getNextFreeFATIndex();
 int writeCluster(BYTE *buffer, int clusterNumber);
-FILE2 createFile(char *filename, int typeval);
+unsigned int createFile(char *filename, int typeval);
 int writeFAT(void);
 void fixPath(char *path);
 
