@@ -509,7 +509,7 @@ Record *getFileRecord(char *path) {
     return currentRecord;
   }
   else { // or the path was empty
-    printf("Can not get the given Record\n");
+    printf("Provide a valid filename\n");
     return NULL;
   }
 }
@@ -601,7 +601,6 @@ int writeFAT() {
     int adds = superblock.pFATSectorStart;
 
     memcpy(writeBuffer, (FAT + (pointersPerSector * i)), SECTOR_SIZE);
-    //printf("writeBuffer: %s\n", writeBuffer);
     if (write_sector((adds + i), writeBuffer) != 0) {
       return WRITE_ERROR;
     }
